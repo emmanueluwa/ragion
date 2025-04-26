@@ -24,6 +24,7 @@
           <input
             type="text"
             id="userMessage"
+            name="msg"
             placeholder="Type your question here..."
             autocomplete="off"
           />
@@ -38,43 +39,43 @@
         .addEventListener("submit", function (e) {
           e.preventDefault();
 
-          // Get user message
-          const userMessage = document.getElementById("userMessage").value;
+          formData = new FormData();
+
+          userMessage = document.getElementById("userMessage").value;
           if (!userMessage.trim()) return;
 
-          // Add user message to chat
+          formData.append("msg", userMessage);
+
+          //adding user message to chat
           const chatBox = document.getElementById("chatBox");
           chatBox.innerHTML += `<div class="user-message">${userMessage}</div>`;
 
-          // Clear input
+          //clearing input
           document.getElementById("userMessage").value = "";
 
-          // Show loading indicator
+          //showing loading indicator
           chatBox.innerHTML += `<div class="bot-message loading" id="loading">Thinking...</div>`;
           chatBox.scrollTop = chatBox.scrollHeight;
 
-          // Send message to backend
           fetch("/get", {
             method: "POST",
-            body: new FormData(document.getElementById("chatForm")),
+            body: formData,
           })
             .then((response) => response.text())
             .then((data) => {
-              // Remove loading indicator
               document.getElementById("loading").remove();
 
-              // Add bot response
+              //adding llm response
               chatBox.innerHTML += `<div class="bot-message">${data}</div>`;
               chatBox.scrollTop = chatBox.scrollHeight;
             })
             .catch((error) => {
-              // Remove loading indicator
               document.getElementById("loading").remove();
 
-              // Show error message
-              chatBox.innerHTML += `<div class="bot-message error">Sorry, something went wrong. Please try again.</div>`;
+              // handling error message
+              chatBox.innerHTML += `<div class="bot-message error">Sorry, something went wrong. Please try again :)</div>`;
               chatBox.scrollTop = chatBox.scrollHeight;
-              console.error("Error:", error);
+              console.error("Error: ", error);
             });
         });
     </script>
