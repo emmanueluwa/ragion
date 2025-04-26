@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple RAG Chatbot</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="chat-container">
+      <div class="chat-header">
+        <h1>ragna the consultant</h1>
+      </div>
+      <div class="chat-box" id="chatBox">
+        <div class="bot-message">
+          Hi there! I'm your RAG assistant. Ask me anything!
+        </div>
+      </div>
+      <div class="chat-input">
+        <form id="chatForm" method="post">
+          <input
+            type="text"
+            id="userMessage"
+            placeholder="Type your question here..."
+            autocomplete="off"
+          />
+          <button type="submit" id="sendButton">Send</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("chatForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          // Get user message
+          const userMessage = document.getElementById("userMessage").value;
+          if (!userMessage.trim()) return;
+
+          // Add user message to chat
+          const chatBox = document.getElementById("chatBox");
+          chatBox.innerHTML += `<div class="user-message">${userMessage}</div>`;
+
+          // Clear input
+          document.getElementById("userMessage").value = "";
+
+          // Show loading indicator
+          chatBox.innerHTML += `<div class="bot-message loading" id="loading">Thinking...</div>`;
+          chatBox.scrollTop = chatBox.scrollHeight;
+
+          // Send message to backend
+          fetch("/get", {
+            method: "POST",
+            body: new FormData(document.getElementById("chatForm")),
+          })
+            .then((response) => response.text())
+            .then((data) => {
+              // Remove loading indicator
+              document.getElementById("loading").remove();
+
+              // Add bot response
+              chatBox.innerHTML += `<div class="bot-message">${data}</div>`;
+              chatBox.scrollTop = chatBox.scrollHeight;
+            })
+            .catch((error) => {
+              // Remove loading indicator
+              document.getElementById("loading").remove();
+
+              // Show error message
+              chatBox.innerHTML += `<div class="bot-message error">Sorry, something went wrong. Please try again.</div>`;
+              chatBox.scrollTop = chatBox.scrollHeight;
+              console.error("Error:", error);
+            });
+        });
+    </script>
+  </body>
+</html>
