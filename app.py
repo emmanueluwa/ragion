@@ -56,13 +56,18 @@ def index():
 # routes
 @app.route("/get", methods=["GET", "POST"])
 def chat():
-    msg = request.form["msg"]
-    input = msg
-    print(input)
-    response = rag_chain.invoke({"input": msg})
-    print("Response: ", response["answer"])
+    try:
+        msg = request.form["msg"]
+        input = msg
+        print(input)
+        response = rag_chain.invoke({"input": msg})
+        print("Response: ", response["answer"])
 
-    return str(response["answer"])
+        return str(response["answer"])
+
+    except Exception as e:
+        print("error in endpoint:", e)
+        return jsonify({"error": str(e)}), 500
 
 
 # development mode
