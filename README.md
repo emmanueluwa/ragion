@@ -29,3 +29,5 @@
 - Pinecone
 - LLM
 - Langchain
+- Redis
+- Celery
