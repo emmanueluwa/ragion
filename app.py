@@ -56,8 +56,8 @@ def check_task(task_id):
 
 
 # development mode
-# if __name__ == "__main__":
-#     app.run(host="0.0.0.0", port=8080, debug=True)
-
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=8080, debug=True)
+
+# if __name__ == "__main__":
+#     app.run()

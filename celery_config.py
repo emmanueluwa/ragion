@@ -26,6 +26,8 @@ celery_app.conf.update(
     enable_utc=True,
 )
 
+import tasks
+
 
 # celery_app = Celery(
 #     "main", broker=os.environ.get("REDIS_URL"), backend=os.environ.get("REDIS_URL")
