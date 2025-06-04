@@ -1,4 +1,4 @@
-app = "ragion-celery-worker"
+app = "r-celery-worker"
 primary_region = "lhr"
 
 [processes]

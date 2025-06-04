@@ -12,4 +12,5 @@ langchain_experimental
 gunicorn
 celery
 redis
+sentence-transformers
 # -e .

@@ -1,0 +1,3 @@
+run celery with the following command
+
+- celery -A tasks worker --loglevel=info

@@ -12,7 +12,7 @@
   <body>
     <div class="chat-container">
       <div class="chat-header">
-        <h1>ragna the consultant</h1>
+        <h1>ragion consultant</h1>
       </div>
       <div class="chat-box" id="chatBox">
         <div class="bot-message">
@@ -34,28 +34,35 @@
     </div>
 
     <script>
+      // state management variables
+      let waitingForState = false;
+      let currentState = null;
+
       document
         .getElementById("chatForm")
         .addEventListener("submit", function (e) {
           e.preventDefault();
 
-          formData = new FormData();
-
           userMessage = document.getElementById("userMessage").value;
           if (!userMessage.trim()) return;
 
+          formData = new FormData();
           formData.append("msg", userMessage);
 
           //adding user message to chat
           const chatBox = document.getElementById("chatBox");
-          chatBox.innerHTML += `<div class="user-message">${userMessage}</div>`;
+          addMessage(chatBox, "user-message", userMessage);
 
           //clearing input
           document.getElementById("userMessage").value = "";
 
           //showing loading indicator
-          chatBox.innerHTML += `<div class="bot-message loading" id="loading">Thinking...</div>`;
-          chatBox.scrollTop = chatBox.scrollHeight;
+          const loadingElement = addMessage(
+            chatBox,
+            "bot-message loading",
+            "loading response...",
+            "loading"
+          );
 
           fetch("/get", {
             method: "POST",
@@ -63,24 +70,70 @@
           })
             .then((response) => response.json())
             .then((data) => {
-              if (data.success && data.task_id) {
-                pollTaskId(data.task_id, chatBox);
-              } else {
-                document.getElementById("loading").remove();
+              //remove loading indicator
+              document.getElementById("loading").remove();
 
+              if (data.success) {
+                if (data.needs_state) {
+                  // bot is asking for state
+                  waitingForState = true;
+                  updateInputPlaceholder("Enter the state name...");
+                  addMessage(chatBox, "bot-message", data.response);
+                } else if (data.combined_query) {
+                  //bot processed combined query
+                  waitingForState = false;
+                  updateInputPlaceholder("Type your question here...");
+                  addMessage(
+                    chatBox,
+                    "bot-message",
+                    `Understood. Processing: "${data.combined_query}"`
+                  );
+
+                  //starting poll for actual answer
+                  pollTaskId(data.task_id, chatBox);
+                } else if (data.used_previous_state) {
+                  // bot is using previously mentioned state
+                  addMessage(
+                    chatBox,
+                    "bot-message",
+                    `Answering your question regarding ${data.used_previous_state} ...`
+                  );
+                  pollTaskId(data.task_id, chatBox);
+                } else if (data.task_id) {
+                  //normal processing with state detected
+                  if (data.state_detected) {
+                    currentState = data.state_detected;
+                    addMessage(
+                      chatBox,
+                      "bot-message",
+                      `Answering your question regarding ${data.used_previous_state} ...`
+                    );
+                  }
+                  pollTaskId(data.task_id, chatBox);
+                } else {
+                  //direct response (no task needed)
+                  addMessage(chatBox, "bot-message", data.response);
+                }
+              } else {
                 // handling error message
-                chatBox.innerHTML += `<div class="bot-message error">Sorry, something went wrong. Please try again :)</div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
-                console.error("Error: ", error);
+                // chatBox.scrollTop = chatBox.scrollHeight;
+                addMessage(
+                  chatBox,
+                  "bot-message",
+                  "Sorry something went wrong. Please try again."
+                );
+                resetConversationState();
               }
             })
             .catch((error) => {
               document.getElementById("loading").remove();
-
-              // handling error message
-              chatBox.innerHTML += `<div class="bot-message error">Sorry, something went wrong. Please try again :)</div>`;
-              chatBox.scrollTop = chatBox.scrollHeight;
-              console.error("Error: ", error);
+              addMessage(
+                chatBox,
+                "bot-message",
+                "Sorry, something went wrong. Please try again."
+              );
+              console.error("Error", error);
+              resetConversationState();
             });
         });
 
@@ -92,20 +145,32 @@
             .then((data) => {
               if (data.status === "SUCCESS") {
                 clearInterval(checkTask);
-
                 document.getElementById("loading").remove();
 
                 //adding llm response
-                chatBox.innerHTML += `<div class="bot-message">${data.response}</div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
+                addMessage(chatBox, "bot-message", data.response);
+                resetConversationState();
+                // chatBox.scrollTop = chatBox.scrollHeight;
+              } else if (data.satus === "FAILURE") {
+                clearInterval(checkTask);
+                document.getElementById("loading").remove();
+                addMessage(
+                  chatBox,
+                  "bot error",
+                  "Sorry, something went wrong. Please try again."
+                );
+                resetConversationState();
               } else if (data.status !== "PENDING") {
                 clearInterval(checkTask);
-
                 document.getElementById("loading").remove();
 
                 // handling error message
-                chatBox.innerHTML += `<div class="bot-message error">Sorry, something went wrong. Please try again :)</div>`;
-                chatBox.scrollTop = chatBox.scrollHeight;
+                addMessage(
+                  chatBox,
+                  "bot error",
+                  "Sorry, something went wrong. Please try again."
+                );
+                // chatBox.scrollTop = chatBox.scrollHeight;
               }
             })
             .catch((error) => {
@@ -114,11 +179,38 @@
               document.getElementById("loading").remove();
 
               // handling error message
-              chatBox.innerHTML += `<div class="bot-message error">Sorry, something went wrong. Please try again :)</div>`;
-              chatBox.scrollTop = chatBox.scrollHeight;
+              addMessage(
+                chatBox,
+                "bot error",
+                "Sorry, something went wrong. Please try again."
+              );
+              // chatBox.scrollTop = chatBox.scrollHeight;
               console.error(error);
             });
-        }, 1000);
+        }, 2000);
+      }
+
+      function addMessage(chatBox, className, message, id = null) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = className;
+        messageDiv.innerHTML = message;
+
+        if (id) {
+          messageDiv.id = id;
+        }
+
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return messageDiv;
+      }
+
+      function updateInputPlaceholder(text) {
+        document.getElementById("userMessage").placeholder = text;
+      }
+
+      function resetConversationState() {
+        waitingForState = false;
+        updateInputPlaceholder("Type your question here...");
       }
     </script>
   </body>
