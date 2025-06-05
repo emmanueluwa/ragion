@@ -15,6 +15,24 @@ body {
   padding: 20px;
 }
 
+/* File uploader */
+.file-uploader {
+  border: 2px dashed #ccc;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 8px;
+  margin-right: 50px;
+}
+
+.file-uploader input[type="file"] {
+  display: none;
+}
+
+.upload-progress {
+  margin-top: 20px;
+}
+
 /* Chat Container */
 .chat-container {
   width: 100%;
