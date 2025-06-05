@@ -24,6 +24,21 @@ os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 extracted_data = load_pdf_file(data="data/")
 text_chunks = text_split(extracted_data)
+
+# TODO: make dynamic, set by document
+county = "Manatee County, Florida"
+
+for chunk in text_chunks:
+    # prepend county to chunk text
+    chunk.page_content = f"Jurisdiction: {county}. {chunk.page_content}"
+
+    chunk.metadata.update(
+        {
+            "jurisdiction": "Manatee County, Florida",
+            "document": "Storm Water Design Procedure Manual",
+        }
+    )
+
 embeddings = download_hugging_face_embeddings()
 
 pc = Pinecone(api_key=PINECONE_API_KEY)

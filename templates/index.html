@@ -113,6 +113,7 @@
                 } else {
                   //direct response (no task needed)
                   addMessage(chatBox, "bot-message", data.response);
+                  console.log("GOT HERE!");
                 }
               } else {
                 // handling error message
@@ -143,17 +144,29 @@
           fetch(`/check_task/${task_id}`)
             .then((response) => response.json())
             .then((data) => {
+              console.log(
+                "Polling response: ",
+                data,
+                "Status:",
+                data.status,
+                "Type:",
+                typeof data.status
+              );
               if (data.status === "SUCCESS") {
                 clearInterval(checkTask);
-                document.getElementById("loading").remove();
+                if (document.getElementById("loading")) {
+                  document.getElementById("loading").remove();
+                }
 
                 //adding llm response
                 addMessage(chatBox, "bot-message", data.response);
                 resetConversationState();
                 // chatBox.scrollTop = chatBox.scrollHeight;
-              } else if (data.satus === "FAILURE") {
+              } else if (data.status === "FAILURE") {
                 clearInterval(checkTask);
-                document.getElementById("loading").remove();
+                if (document.getElementById("loading")) {
+                  document.getElementById("loading").remove();
+                }
                 addMessage(
                   chatBox,
                   "bot error",
@@ -162,7 +175,9 @@
                 resetConversationState();
               } else if (data.status !== "PENDING") {
                 clearInterval(checkTask);
-                document.getElementById("loading").remove();
+                if (document.getElementById("loading")) {
+                  document.getElementById("loading").remove();
+                }
 
                 // handling error message
                 addMessage(
@@ -176,7 +191,9 @@
             .catch((error) => {
               clearInterval(checkTask);
 
-              document.getElementById("loading").remove();
+              if (document.getElementById("loading")) {
+                document.getElementById("loading").remove();
+              }
 
               // handling error message
               addMessage(

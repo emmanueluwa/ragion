@@ -47,7 +47,11 @@ docsearch = PineconeVectorStore.from_existing_index(
     embedding=embeddings,
 )
 
-retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+# By default, similarity search ignores metadata unless you explicitly filter or boost based on it.
+retriever = docsearch.as_retriever(
+    search_type="similarity",
+    search_kwargs={"k": 3, "filter": {"jurisdiction": "Manatee County, Florida"}},
+)
 
 llm = GoogleGenerativeAI(model="models/gemini-2.0-flash", google_api_key=GOOGLE_API_KEY)
 
