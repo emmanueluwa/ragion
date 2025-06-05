@@ -16,6 +16,9 @@ body {
 }
 
 /* File uploader */
+.file-uploader-container {
+}
+
 .file-uploader {
   border: 2px dashed #ccc;
   padding: 20px;
@@ -23,6 +26,22 @@ body {
   cursor: pointer;
   border-radius: 8px;
   margin-right: 50px;
+}
+
+.store-index-button {
+  padding: 4px 8px;
+  color: cornflowerblue;
+  margin-top: 50px;
+  background: white;
+  border: none;
+  font-size: 32px;
+  font-size: x-large;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.store-index-button:hover {
+  box-shadow: inset;
 }
 
 .file-uploader input[type="file"] {

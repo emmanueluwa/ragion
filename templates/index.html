@@ -10,10 +10,14 @@
     />
   </head>
   <body>
-    <div class="file-uploader">
-      <p>Drag and drop files here or click to upload</p>
-      <input type="file" id="file-input" multiple />
-      <div class="upload-progress"></div>
+    <div class="file-uploader-container">
+      <div class="file-uploader">
+        <p>Drag and drop files here or click to upload</p>
+        <input type="file" id="file-input" multiple />
+        <ul id="file-list"></ul>
+        <div class="upload-progress"></div>
+      </div>
+      <button class="store-index-button">download</button>
     </div>
     <div class="chat-container">
       <div class="chat-header">
@@ -39,6 +43,44 @@
     </div>
 
     <script>
+      /*
+      DOCUMENT UPLOAD SECTION
+      */
+      document.querySelector(".file-uploader").addEventListener("click", () => {
+        document.getElementById("file-input").click();
+      });
+
+      document
+        .getElementById("file-input")
+        .addEventListener("change", function (event) {
+          const files = event.target.files;
+
+          for (const file of files) {
+            uploadFile(file);
+          }
+        });
+
+      function uploadFile(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        fetch("/upload", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(`${file.name} uploaded!`);
+          })
+          .catch((error) => {
+            console.error("Upload failed", error);
+          });
+      }
+
+      /* 
+      CHATBOT SECTION
+      */
+
       // state management variables
       let waitingForState = false;
       let currentState = null;

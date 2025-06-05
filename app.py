@@ -148,6 +148,17 @@ def check_task(task_id):
         return jsonify({"error": str(e)}), 500
 
 
+# uploading documents for chatbot reference
+@app.route("/upload", methods=["POST"])
+def upload():
+    uploaded_file = request.files["file"]
+    if uploaded_file.filename != "":
+        file_path = os.path.join("data", uploaded_file.filename)
+        uploaded_file.save(file_path)
+
+    return jsonify({"success": True})
+
+
 # development mode
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)
