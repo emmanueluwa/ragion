@@ -106,7 +106,7 @@
                     addMessage(
                       chatBox,
                       "bot-message",
-                      `Answering your question regarding ${data.used_previous_state} ...`
+                      `Answering your question regarding ${currentState} ...`
                     );
                   }
                   pollTaskId(data.task_id, chatBox);
@@ -144,14 +144,6 @@
           fetch(`/check_task/${task_id}`)
             .then((response) => response.json())
             .then((data) => {
-              console.log(
-                "Polling response: ",
-                data,
-                "Status:",
-                data.status,
-                "Type:",
-                typeof data.status
-              );
               if (data.status === "SUCCESS") {
                 clearInterval(checkTask);
                 if (document.getElementById("loading")) {

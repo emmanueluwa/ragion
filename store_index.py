@@ -8,6 +8,7 @@ from src.helper import load_pdf_file, text_split, download_hugging_face_embeddin
 from pinecone.grpc import PineconeGRPC as Pinecone
 from pinecone import ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from dotenv import load_dotenv
 import os
 
@@ -23,7 +24,15 @@ os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 
 extracted_data = load_pdf_file(data="data/")
-text_chunks = text_split(extracted_data)
+# text_chunks = text_split(extracted_data)
+
+"""
+increase chunk overlap and adjust chunk size to improve performance
+
+chunk_size = 800-1200 for technical docs
+"""
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
+text_chunks = text_splitter.split_documents(extracted_data)
 
 # TODO: make dynamic, set by document
 county = "Manatee County, Florida"

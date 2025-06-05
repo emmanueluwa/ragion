@@ -37,7 +37,8 @@ embeddings = download_hugging_face_embeddings()
 index_name = "ragion"
 
 client = genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel(model_name="models/gemini-2.0-flash")
+# model = genai.GenerativeModel(model_name="models/gemini-2.0-flash")
+model = genai.GenerativeModel(model_name="models/gemini-pro")
 chat_session = model.start_chat()
 
 
@@ -50,7 +51,7 @@ docsearch = PineconeVectorStore.from_existing_index(
 # By default, similarity search ignores metadata unless you explicitly filter or boost based on it.
 retriever = docsearch.as_retriever(
     search_type="similarity",
-    search_kwargs={"k": 3, "filter": {"jurisdiction": "Manatee County, Florida"}},
+    search_kwargs={"k": 5, "filter": {"jurisdiction": "Manatee County, Florida"}},
 )
 
 llm = GoogleGenerativeAI(model="models/gemini-2.0-flash", google_api_key=GOOGLE_API_KEY)
@@ -75,29 +76,17 @@ def llm_get_state(msg):
         initial_prompt = f"""
         Analyze this question: "{msg}"
 
-        Identify the relevant jurisdiction (state and/or county) for regulatory compliance based on:
-        1. Explicit mentions of Florida counties (especially Manatee County)
-        2. References to Florida Land Development Codes (LDCs), ordinances, or Manatee County forms/manuals
-        3. Implied jurisdiction through document context
+        Your task: Identify if a specific county or state is explicitly mentioned in the question.
 
-        Detection criteria:
-        - Look for "Manatee County" or "Florida" specifically
-        - Check for Florida-specific terms: "Chapter 163", "LDC", "Florida Statutes", "Fla. Stat"
-        - Identify Manatee County references: "DEV REVIEW PROCEDURES MANUAL", "Public Works Standards Manual", "Form D1-D8"
-        - Recognize Florida county abbreviations: FL, Manatee Co.
-        - Note general terms like "county regulations" or "local ordinances" when paired with document context
+        Rules:
+        - Only return a county or state if it is directly, clearly mentioned in the text (e.g., "Manatee County", "Florida", "Orange County").
+        - Do NOT infer or guess based on context, document references, or implied meaning.
+        - If there is no explicit mention of a county or state, return exactly: None
 
-        Response rules:
-        1. If Manatee County is mentioned or implied by document references, return "Manatee County, Florida"
-        2. If only Florida is mentioned, return "Florida"
-        3. If no location specified but question references LDCs/ordinances/manuals from context, default to "Manatee County, Florida"
-        4. For other states, return "State: [Full State Name]"
-        5. If truly no geographic context, return "None"
-
-        Return ONLY the jurisdiction in this format:
-        - County, State (when county specified)
-        - State only (when state specified)
-        - "None" (no geographic context)
+        Return format:
+        - If a county is mentioned: County, State (e.g., "Manatee County, Florida")
+        - If only a state is mentioned: State (e.g., "Florida")
+        - If nothing is mentioned: None
         """
 
         response = chat_session.send_message(initial_prompt)
