@@ -1,16 +1,19 @@
 import os
+import uuid
+
 from flask import Flask, render_template, jsonify, request, session
 
-from tasks import llm_get_state
-from tasks import llm_call
+from tasks import llm_get_state, llm_call, process_file
 from celery_config import celery_app
 
 celery_app.autodiscover_tasks(["tasks"], force=True)
 
 app = Flask(__name__)
 
-
 app.secret_key = os.environ.get("SECRET_KEY")
+
+# storing indexing progress by task ID
+indexing_progress = {}
 
 
 @app.route("/")
@@ -151,12 +154,26 @@ def check_task(task_id):
 # uploading documents for chatbot reference
 @app.route("/upload", methods=["POST"])
 def upload():
-    uploaded_file = request.files["file"]
-    if uploaded_file.filename != "":
-        file_path = os.path.join("data", uploaded_file.filename)
-        uploaded_file.save(file_path)
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No file selected"}), 400
 
-    return jsonify({"success": True})
+    # saving file
+    file_id = str(uuid.uuid4())
+    file_path = f"data/{file_id}_{file.filename}"
+    file.save(file_path)
+
+    # start indexing task
+    task = process_file.delay(file_path, file_id)
+
+    return jsonify({"task_id": task.id, "file_id": file_id})
+
+
+@app.route("/index_progress/<task_id>")
+def get_index_progress(task_id):
+    return jsonify(
+        indexing_progress.get(task_id, {"percent": 0, "status": "Starting..."})
+    )
 
 
 # development mode

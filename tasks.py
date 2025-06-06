@@ -10,11 +10,14 @@ from dotenv import load_dotenv
 
 import google.generativeai as genai
 from src.prompt import *
+from src.indexing import index_document
+
 
 import os
 import logging
 
 load_dotenv()
+indexing_progress = {}
 
 # debugging
 logger = get_task_logger(__name__)
@@ -30,41 +33,40 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
-
-
-embeddings = download_hugging_face_embeddings()
-
-index_name = "ragion"
-
 client = genai.configure(api_key=GOOGLE_API_KEY)
-# model = genai.GenerativeModel(model_name="models/gemini-2.0-flash")
-model = genai.GenerativeModel(model_name="models/gemini-pro")
-chat_session = model.start_chat()
 
 
-# loading existing index
-docsearch = PineconeVectorStore.from_existing_index(
-    index_name=index_name,
-    embedding=embeddings,
-)
+# TODO: Make jurisdiction dynamic
+def get_rag_chain():
+    embeddings = download_hugging_face_embeddings()
 
-# By default, similarity search ignores metadata unless you explicitly filter or boost based on it.
-retriever = docsearch.as_retriever(
-    search_type="similarity",
-    search_kwargs={"k": 5, "filter": {"jurisdiction": "Manatee County, Florida"}},
-)
+    index_name = "ragion"
 
-llm = GoogleGenerativeAI(model="models/gemini-2.0-flash", google_api_key=GOOGLE_API_KEY)
+    # loading existing index
+    docsearch = PineconeVectorStore.from_existing_index(
+        index_name=index_name,
+        embedding=embeddings,
+    )
 
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", system_prompt),
-        ("human", "{input}"),
-    ]
-)
+    # By default, similarity search ignores metadata unless you explicitly filter or boost based on it.
+    retriever = docsearch.as_retriever(
+        search_type="similarity",
+        search_kwargs={"k": 5, "filter": {"jurisdiction": "Manatee County, Florida"}},
+    )
 
-question_answer_chain = create_stuff_documents_chain(llm, prompt)
-rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+    llm = GoogleGenerativeAI(
+        model="models/gemini-2.0-flash", google_api_key=GOOGLE_API_KEY
+    )
+
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
+            ("human", "{input}"),
+        ]
+    )
+
+    question_answer_chain = create_stuff_documents_chain(llm, prompt)
+    return create_retrieval_chain(retriever, question_answer_chain)
 
 
 @celery_app.task(name="tasks.llm_get_state")
@@ -72,6 +74,10 @@ def llm_get_state(msg):
     """
     Detecting if a U.S state is mentioned in the user's question
     """
+    # model = genai.GenerativeModel(model_name="models/gemini-2.0-flash")
+    model = genai.GenerativeModel(model_name="models/gemini-pro")
+    chat_session = model.start_chat()
+
     try:
         initial_prompt = f"""
         Analyze this question: "{msg}"
@@ -105,7 +111,7 @@ def llm_call(msg):
     """
     Main RAG chain call for answering user questions
     """
-
+    rag_chain = get_rag_chain()
     try:
         print(f"processing query: {msg}")
         response = rag_chain.invoke({"input": msg})
@@ -118,3 +124,16 @@ def llm_call(msg):
         return (
             f"Sorry, an error was encountered when processing your question: {str(e)}"
         )
+
+
+@celery_app.task(bind=True)
+def process_file(self, file_path, file_id):
+    def progress_callback(percent, status):
+        indexing_progress[self.request.id] = {"percent": percent, "status": status}
+
+    try:
+        index_document(file_path, progress_callback=progress_callback)
+
+    except Exception as e:
+        progress_callback(100, f"Error: {str(e)}")
+        raise

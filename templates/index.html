@@ -14,11 +14,10 @@
       <div class="file-uploader">
         <p>Drag and drop files here or click to upload</p>
         <input type="file" id="file-input" multiple />
-        <ul id="file-list"></ul>
-        <div class="upload-progress"></div>
+        <div id="file-list"></div>
       </div>
-      <button class="store-index-button">download</button>
     </div>
+
     <div class="chat-container">
       <div class="chat-header">
         <h1>ragion consultant</h1>
@@ -50,34 +49,72 @@
         document.getElementById("file-input").click();
       });
 
+      //documents uploaded and being indexed
       document
         .getElementById("file-input")
-        .addEventListener("change", function (event) {
-          const files = event.target.files;
+        .addEventListener("change", async (e) => {
+          const files = e.target.files;
+          const fileList = document.getElementById("file-list");
+          fileList.innerHTML = "";
 
           for (const file of files) {
-            uploadFile(file);
+            //creating progress element for each file
+            const fileDiv = document.createElement("div");
+            fileDiv.innerHTML = `
+              <div class="file-name">${file.name}</div>
+              <div class="progress-bar">
+                <div class="progress-fill"></div>
+              </div>
+              <div class="status"></div>
+          `;
+
+            fileList.appendChild(fileDiv);
+
+            await uploadAndIndexFile(file, fileDiv);
           }
         });
 
-      function uploadFile(file) {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        fetch("/upload", {
-          method: "POST",
-          body: formData,
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            console.log(`${file.name} uploaded!`);
-          })
-          .catch((error) => {
-            console.error("Upload failed", error);
+      async function uploadAndIndexFile(file, container) {
+        try {
+          //upload file
+          const uploadForm = new FormData();
+          uploadForm.append("file", file);
+          const uploadResponse = await fetch("/upload", {
+            method: "POST",
+            body: uploadForm,
           });
+
+          if (!uploadResponse.ok) throw new Error(`Upload failed`);
+
+          //start indexing and get task ID
+          const { task_id } = await uploadResponse.json();
+
+          //poll indexing progress
+          let progress = 0;
+          while (progress < 100) {
+            const res = await fetch(`/index_progress/${task_id}`);
+            const { percent, status } = await res.json();
+            progress = percent;
+
+            //updating ui
+            container.querySelector(
+              ".progress-fill"
+            ).style.width = `${percent}%`;
+            container.querySelector(".status").textContent = status;
+
+            if (percent >= 100) break;
+            //poll every second
+            await new Promise((r) => setTimeout(r, 1000));
+          }
+        } catch (error) {
+          container.querySelector(
+            ".status"
+          ).textContent = `Error: ${error.message}`;
+          container.querySelector(".status").style.color = "red";
+        }
       }
 
-      /* 
+      /*
       CHATBOT SECTION
       */
 
