@@ -7,11 +7,11 @@ from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
-
 import google.generativeai as genai
+import redis
+
 from src.prompt import *
 from src.indexing import index_document
-
 
 import os
 import logging
@@ -34,6 +34,14 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 client = genai.configure(api_key=GOOGLE_API_KEY)
+
+# redis connection for progress tracking
+redis_endpoint = os.environ.get("REDIS_ENDPOINT")
+redis_port = os.environ.get("REDIS_PORT", "6379")
+redis_password = os.environ.get("REDIS_PASSWORD")
+redis_url = f"rediss://default:{redis_password}@{redis_endpoint}:{redis_port}"
+# TODO: add  ssl_cert_reqs='required' to from_url in production
+r = redis.Redis.from_url(redis_url, decode_responses=True, ssl_cert_reqs=None)
 
 
 # TODO: Make jurisdiction dynamic
@@ -129,10 +137,12 @@ def llm_call(msg):
 @celery_app.task(bind=True)
 def process_file(self, file_path, file_id):
     def progress_callback(percent, status):
-        indexing_progress[self.request.id] = {"percent": percent, "status": status}
+        r.hset(self.request.id, mapping={"percent": percent, "status": status})
+        r.expire(self.request.id, 3600)  # 1hr
 
     try:
         index_document(file_path, progress_callback=progress_callback)
+        progress_callback(100, "Indexing complete")
 
     except Exception as e:
         progress_callback(100, f"Error: {str(e)}")

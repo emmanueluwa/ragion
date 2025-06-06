@@ -89,28 +89,25 @@
           //start indexing and get task ID
           const { task_id } = await uploadResponse.json();
 
-          //poll indexing progress
-          let progress = 0;
-          while (progress < 100) {
-            const res = await fetch(`/index_progress/${task_id}`);
-            const { percent, status } = await res.json();
-            progress = percent;
-
-            //updating ui
-            container.querySelector(
-              ".progress-fill"
-            ).style.width = `${percent}%`;
-            container.querySelector(".status").textContent = status;
-
-            if (percent >= 100) break;
-            //poll every second
-            await new Promise((r) => setTimeout(r, 1000));
-          }
+          pollIndexProgress(task_id, container);
         } catch (error) {
           container.querySelector(
             ".status"
           ).textContent = `Error: ${error.message}`;
           container.querySelector(".status").style.color = "red";
+        }
+      }
+
+      async function pollIndexProgress(task_id, container) {
+        while (true) {
+          res = await fetch(`/index_progress/${task_id}`);
+          const { percent, status } = await res.json();
+
+          container.querySelector(".progress-fill").style.width = `${percent}%`;
+          container.querySelector(".status").textContext = status;
+
+          if (percent >= 100) break;
+          await new Promise((r) => setTimeout(r, 1000));
         }
       }
 

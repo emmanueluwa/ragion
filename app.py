@@ -2,15 +2,25 @@ import os
 import uuid
 
 from flask import Flask, render_template, jsonify, request, session
-
 from tasks import llm_get_state, llm_call, process_file
 from celery_config import celery_app
+
+import redis
 
 celery_app.autodiscover_tasks(["tasks"], force=True)
 
 app = Flask(__name__)
 
 app.secret_key = os.environ.get("SECRET_KEY")
+
+# redis connection for progress tracking
+redis_endpoint = os.environ.get("REDIS_ENDPOINT")
+redis_port = os.environ.get("REDIS_PORT", "6379")
+redis_password = os.environ.get("REDIS_PASSWORD")
+
+redis_url = f"rediss://default:{redis_password}@{redis_endpoint}:{redis_port}"
+# TODO: add  ssl_cert_reqs='required' to from_url in production
+r = redis.Redis.from_url(redis_url, decode_responses=True, ssl_cert_reqs=None)
 
 # storing indexing progress by task ID
 indexing_progress = {}
@@ -171,9 +181,11 @@ def upload():
 
 @app.route("/index_progress/<task_id>")
 def get_index_progress(task_id):
-    return jsonify(
-        indexing_progress.get(task_id, {"percent": 0, "status": "Starting..."})
-    )
+    progress = r.hgetall(task_id)
+    percent = progress.get("percent", 0)
+    status = progress.get("status", "Starting...")
+
+    return jsonify({"percent": percent, "status": status})
 
 
 # development mode
