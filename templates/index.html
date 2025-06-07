@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Simple RAG Chatbot</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}"
@@ -11,8 +16,14 @@
   </head>
   <body>
     <div class="file-uploader-container">
+      <h1>Add files</h1>
+      <p class="subtitle">Add documents with information you need</p>
+
       <div class="file-uploader">
-        <p>Drag and drop files here or click to upload</p>
+        <div class="upload-area" id="uploadArea">
+          <div class="upload-icon">&#128196;</i></div>
+          <p class="upload-text">Drag and drop files here or click to upload</p>
+        </div>
         <input type="file" id="file-input" multiple />
         <div id="file-list"></div>
       </div>
