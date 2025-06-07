@@ -21,7 +21,7 @@
 
       <div class="file-uploader">
         <div class="upload-area" id="uploadArea">
-          <div class="upload-icon">&#128196;</i></div>
+          <div class="upload-icon">&#128196;</div>
           <p class="upload-text">Drag and drop files here or click to upload</p>
         </div>
         <input type="file" id="file-input" multiple />
@@ -74,9 +74,9 @@
             fileDiv.innerHTML = `
               <div class="file-name">${file.name}</div>
               <div class="progress-bar">
-                <div class="progress-fill"></div>
+                <div class="progress-fill"><div class="status"></div></div>
               </div>
-              <div class="status"></div>
+              
           `;
 
             fileList.appendChild(fileDiv);
@@ -114,8 +114,10 @@
           res = await fetch(`/index_progress/${task_id}`);
           const { percent, status } = await res.json();
 
+          console.log({ percent, status });
+
           container.querySelector(".progress-fill").style.width = `${percent}%`;
-          container.querySelector(".status").textContext = status;
+          container.querySelector(".status").textContent = `${percent}%`;
 
           if (percent >= 100) break;
           await new Promise((r) => setTimeout(r, 1000));
