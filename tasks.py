@@ -135,13 +135,15 @@ def llm_call(msg):
 
 
 @celery_app.task(bind=True)
-def process_file(self, file_path, file_id, county):
+def process_file(self, file_path, file_id, county, description):
     def progress_callback(percent, status):
         r.hset(self.request.id, mapping={"percent": percent, "status": status})
         r.expire(self.request.id, 3600)  # 1hr
 
     try:
-        index_document(file_path, county, progress_callback=progress_callback)
+        index_document(
+            file_path, county, description, progress_callback=progress_callback
+        )
         progress_callback(100, "Indexing complete")
 
     except Exception as e:

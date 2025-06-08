@@ -35,7 +35,7 @@
           </div>
 
           <div class="modal-body">
-            <form>
+            <form id="upload-form" enctype="multipart/form-data">
               <div class="file-uploader form-group">
                 <div class="upload-area" id="uploadArea">
                   <div class="upload-icon">&#128196;</div>
@@ -43,22 +43,39 @@
                     Drag and drop files here or click to upload
                   </p>
                 </div>
-                <input type="file" id="file-input" multiple />
+                <input
+                  name="files"
+                  type="file"
+                  id="file-input"
+                  multiple
+                  required
+                />
+                <ul id="fileList"></ul>
               </div>
               <div class="form-group">
                 <label for="county">County &#40;if applicable&#41;</label>
-                <input type="text" id="county" class="form-control" />
+                <input
+                  name="county"
+                  type="text"
+                  id="county"
+                  class="form-control"
+                />
               </div>
               <div class="form-group">
                 <label for="description">Briefly describe the document</label>
-                <input type="text" id="description" class="form-control" />
+                <input
+                  name="description"
+                  type="text"
+                  id="description"
+                  class="form-control"
+                />
               </div>
 
               <div style="text-align: right; margin-top: 25px">
                 <button class="btn btn-secondary" onclick="closeModal()">
                   Cancel
                 </button>
-                <button class="btn btn-primary">Save</button>
+                <button type="submit" class="btn btn-primary">Save</button>
               </div>
             </form>
           </div>
@@ -68,6 +85,7 @@
       <div id="file-list"></div>
     </div>
 
+    <!-- CHATBOT SECTION -->
     <div class="chat-container">
       <div class="chat-header">
         <h1>ragion consultant</h1>
@@ -97,7 +115,6 @@
       */
       // MODAL SECTION
       function openModal() {
-        console.log("GOT HERE");
         document.getElementById("modal").style.display = "block";
         document.body.style.overflow = "hidden";
       }
@@ -126,39 +143,53 @@
         document.getElementById("file-input").click();
       });
 
-      //documents uploaded and being indexed
+      //chosen document preview
       document
         .getElementById("file-input")
-        .addEventListener("change", async (e) => {
-          const files = e.target.files;
-          const fileList = document.getElementById("file-list");
+        .addEventListener("change", function (event) {
+          const fileList = document.getElementById("fileList");
           fileList.innerHTML = "";
-
-          for (const file of files) {
-            //creating progress element for each file
-            const fileDiv = document.createElement("div");
-            fileDiv.innerHTML = `
-              <div class="file-name">${file.name}</div>
-              <div class="progress-bar">
-                <div class="progress-fill"><div class="status"></div></div>
-              </div>
-
-          `;
-
-            fileList.appendChild(fileDiv);
-
-            await uploadAndIndexFile(file, fileDiv);
+          for (const file of event.target.files) {
+            const li = document.createElement("li");
+            li.textContent = file.name;
+            fileList.appendChild(li);
           }
         });
 
-      async function uploadAndIndexFile(file, container) {
+      //documents uploaded and being indexed
+      document
+        .getElementById("upload-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const form = e.target;
+          formData = new FormData(form);
+          const files = formData.getAll("files");
+          const county = formData.get("county");
+          const description = formData.get("description");
+          const fileList = document.getElementById("file-list");
+          // fileList.innerHTML = "";
+
+          for (const file of files) {
+            //creating progress element for each file
+            const fileDiv = createProgressElement(file.name);
+
+            fileList.appendChild(fileDiv);
+
+            const individualFormData = new FormData();
+            individualFormData.append("file", file);
+            individualFormData.append("county", county);
+            individualFormData.append("description", description);
+
+            await uploadAndIndexFile(individualFormData, fileDiv);
+          }
+        });
+
+      async function uploadAndIndexFile(formData, container) {
         try {
-          //upload file
-          const uploadForm = new FormData();
-          uploadForm.append("file", file);
           const uploadResponse = await fetch("/upload", {
             method: "POST",
-            body: uploadForm,
+            body: formData,
           });
 
           if (!uploadResponse.ok) throw new Error(`Upload failed`);
@@ -188,6 +219,19 @@
           if (percent >= 100) break;
           await new Promise((r) => setTimeout(r, 1000));
         }
+      }
+
+      function createProgressElement(filename) {
+        const div = document.createElement("div");
+        div.innerHTML = `
+              <div class="file-name">${filename}</div>
+              <div class="progress-bar">
+                <div class="progress-fill"><div class="status"></div></div>
+              </div>
+
+          `;
+
+        return div;
       }
 
       /*
@@ -273,7 +317,6 @@
                 } else {
                   //direct response (no task needed)
                   addMessage(chatBox, "bot-message", data.response);
-                  console.log("GOT HERE!");
                 }
               } else {
                 // handling error message

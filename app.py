@@ -3,6 +3,7 @@ import uuid
 
 from flask import Flask, render_template, jsonify, request, session
 from tasks import llm_get_state, llm_call, process_file
+from werkzeug.utils import secure_filename
 from celery_config import celery_app
 
 import redis
@@ -164,13 +165,18 @@ def check_task(task_id):
 # uploading documents for chatbot reference
 @app.route("/upload", methods=["POST"])
 def upload():
+    if "file" not in request.files:
+        return jsonify({"error": "no files added"}), 400
+
     file = request.files["file"]
-    county = request.form["county"]
-    description = request.form["description"]
+    county = request.form.get("county", "")
+    description = request.form.get("description", "")
 
     if file.filename == "":
         return jsonify({"error": "No file selected"}), 400
 
+    # making filename secure
+    filename = secure_filename(file.filename)
     # saving file
     file_id = str(uuid.uuid4())
     file_path = f"data/{file_id}_{file.filename}"
