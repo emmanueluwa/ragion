@@ -7,10 +7,12 @@ execute once unless data source is updated
 from src.helper import load_pdf_file, text_split, download_hugging_face_embeddings
 from pinecone.grpc import PineconeGRPC as Pinecone
 from pinecone import ServerlessSpec
+from pinecone.exceptions import PineconeApiException
 from langchain_pinecone import PineconeVectorStore
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from dotenv import load_dotenv
 import os
+import time
 
 
 from dotenv import load_dotenv
@@ -25,10 +27,11 @@ os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
 
-# TODO: make dynamic, set by document
+# TODO: make dynamic, set by document county given by user
 def index_document(
     file_path,
-    county="Manatee County, Florida",
+    county,
+    description,
     index_name="ragion",
     progress_callback=None,
 ):
@@ -51,11 +54,12 @@ def index_document(
     for chunk in text_chunks:
         # prepend county to chunk text
         chunk.page_content = f"Jurisdiction: {county}. {chunk.page_content}"
+        print({county, chunk.page_content})
 
         chunk.metadata.update(
             {
                 "jurisdiction": county,
-                "document": "Storm Water Design Procedure Manual",
+                "document": description,
             }
         )
 
@@ -63,13 +67,20 @@ def index_document(
         progress_callback(70, "Preparing pinecone index")
     embeddings = download_hugging_face_embeddings()
 
-    if index_name not in pc.list_indexes():
+    try:
         pc.create_index(
             name=index_name,
             dimension=384,
             metric="cosine",
             spec=ServerlessSpec(cloud="aws", region="us-east-1"),
         )
+
+        while not pc.describe_index(index_name).status["ready"]:
+            time.sleep(5)
+
+    except PineconeApiException as e:
+        if "ALREADY_EXISTS" not in str(e):
+            raise
 
     if progress_callback:
         progress_callback(90, "Upserting to pinecone")

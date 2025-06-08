@@ -18,15 +18,54 @@
     <div class="file-uploader-container">
       <h1>Add files</h1>
       <p class="subtitle">Add documents with information you need</p>
-
-      <div class="file-uploader">
-        <div class="upload-area" id="uploadArea">
-          <div class="upload-icon">&#128196;</div>
-          <p class="upload-text">Drag and drop files here or click to upload</p>
-        </div>
-        <input type="file" id="file-input" multiple />
-        <div id="file-list"></div>
+      <div class="form-upload-container">
+        <img
+          class="form-upload-icon"
+          src="/static/images/icons/add-icon.svg"
+          onclick="openModal()"
+        />
       </div>
+
+      <!-- MODEL FORM -->
+      <div id="modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Add document to knowledge base</h3>
+            <button class="close" onclick="closeModal()">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            <form>
+              <div class="file-uploader form-group">
+                <div class="upload-area" id="uploadArea">
+                  <div class="upload-icon">&#128196;</div>
+                  <p class="upload-text">
+                    Drag and drop files here or click to upload
+                  </p>
+                </div>
+                <input type="file" id="file-input" multiple />
+              </div>
+              <div class="form-group">
+                <label for="county">County &#40;if applicable&#41;</label>
+                <input type="text" id="county" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label for="description">Briefly describe the document</label>
+                <input type="text" id="description" class="form-control" />
+              </div>
+
+              <div style="text-align: right; margin-top: 25px">
+                <button class="btn btn-secondary" onclick="closeModal()">
+                  Cancel
+                </button>
+                <button class="btn btn-primary">Save</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div id="file-list"></div>
     </div>
 
     <div class="chat-container">
@@ -56,6 +95,33 @@
       /*
       DOCUMENT UPLOAD SECTION
       */
+      // MODAL SECTION
+      function openModal() {
+        console.log("GOT HERE");
+        document.getElementById("modal").style.display = "block";
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeModal() {
+        document.getElementById("modal").style.display = "none";
+        document.body.style.overflow = "auto";
+      }
+
+      //close modal when clicking outside
+      window.onclick = function (event) {
+        const modal = document.getElementById("modal");
+        if (event.target == modal) {
+          closeModal();
+        }
+      };
+
+      //close modal with escape
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          closeModal();
+        }
+      });
+
       document.querySelector(".file-uploader").addEventListener("click", () => {
         document.getElementById("file-input").click();
       });
@@ -76,7 +142,7 @@
               <div class="progress-bar">
                 <div class="progress-fill"><div class="status"></div></div>
               </div>
-              
+
           `;
 
             fileList.appendChild(fileDiv);

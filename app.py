@@ -165,6 +165,9 @@ def check_task(task_id):
 @app.route("/upload", methods=["POST"])
 def upload():
     file = request.files["file"]
+    county = request.form["county"]
+    description = request.form["description"]
+
     if file.filename == "":
         return jsonify({"error": "No file selected"}), 400
 
@@ -174,7 +177,7 @@ def upload():
     file.save(file_path)
 
     # start indexing task
-    task = process_file.delay(file_path, file_id)
+    task = process_file.delay(file_path, file_id, county, description)
 
     return jsonify({"task_id": task.id, "file_id": file_id})
 
