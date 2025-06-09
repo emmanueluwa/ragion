@@ -7,7 +7,7 @@ _Efficiently find codes, regulations, and technical manuals—no more manual dig
 
 ![Project Screenshot](static/images/screen-shot.png "A screenshot of the application")
 
-- [Blog Post: Project Design Document](https://fulphrone.netlify.app/blog/) — Further discussion about some of the issues I faced with the project.
+- [Blog Post: Project Design Document](https://fulphrone.netlify.app/blog/ragion/) — Further discussion about some of the issues I faced with the project.
 
 ## Table of Contents
 
