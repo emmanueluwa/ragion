@@ -291,7 +291,7 @@ h1 {
 
 /* Header */
 .chat-header {
-  background-color: #4f46e5;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 15px 20px;
   text-align: center;
@@ -373,7 +373,7 @@ h1 {
 }
 
 .chat-input button {
-  background-color: #4f46e5;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -384,7 +384,7 @@ h1 {
 }
 
 .chat-input button:hover {
-  background-color: #4338ca;
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
 .chat-input button:active {

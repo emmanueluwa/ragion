@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simple RAG Chatbot</title>
+    <title>RAG Chatbot</title>
 
     <link
       rel="stylesheet"
@@ -96,7 +96,7 @@
       </div>
       <div class="chat-box" id="chatBox">
         <div class="bot-message">
-          Hi there! I'm your RAG assistant. Ask me anything!
+          Hi there! I'm your County Consultant assistant. Ask me anything!
         </div>
       </div>
       <div class="chat-input">
@@ -126,6 +126,12 @@
       function closeModal() {
         document.getElementById("modal").style.display = "none";
         document.body.style.overflow = "auto";
+
+        // clear form
+        document.getElementById("fileList").innerHTML = "";
+        document.getElementById("file-input").value = "";
+        document.getElementById("county").value = "";
+        document.getElementById("description").value = "";
       }
 
       //close modal when clicking outside
@@ -193,6 +199,12 @@
 
             await uploadAndIndexFile(individualFormData, fileDiv);
           }
+
+          // clear form
+          document.getElementById("fileList").innerHTML = "";
+          document.getElementById("file-input").value = "";
+          document.getElementById("county").value = "";
+          document.getElementById("description").value = "";
         });
 
       async function uploadAndIndexFile(formData, container) {

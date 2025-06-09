@@ -83,7 +83,9 @@ def llm_get_state(msg):
     Detecting if a U.S state is mentioned in the user's question
     """
     # model = genai.GenerativeModel(model_name="models/gemini-2.0-flash")
-    model = genai.GenerativeModel(model_name="models/gemini-pro")
+    # model = genai.GenerativeModel(model_name="models/gemini-1.5-pro-latest")
+    model = genai.GenerativeModel(model_name="models/gemini-2.0-flash")
+
     chat_session = model.start_chat()
 
     try:
@@ -106,7 +108,6 @@ def llm_get_state(msg):
         response = chat_session.send_message(initial_prompt)
         result = response.text.strip()
 
-        print(f"State detection check - Input: '{msg}' -> Output: '{result}'")
         return result
 
     except Exception as e:
@@ -121,7 +122,6 @@ def llm_call(msg):
     """
     rag_chain = get_rag_chain()
     try:
-        print(f"processing query: {msg}")
         response = rag_chain.invoke({"input": msg})
         answer = str(response["answer"])
         print("llm query task complete :)")
