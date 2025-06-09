@@ -72,7 +72,11 @@
               </div>
 
               <div style="text-align: right; margin-top: 25px">
-                <button class="btn btn-secondary" onclick="closeModal()">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  onclick="closeModal()"
+                >
                   Cancel
                 </button>
                 <button type="submit" class="btn btn-primary">Save</button>
@@ -154,6 +158,12 @@
             li.textContent = file.name;
             fileList.appendChild(li);
           }
+        });
+
+      document
+        .getElementById("file-input")
+        .addEventListener("click", function (event) {
+          event.stopPropagation();
         });
 
       //documents uploaded and being indexed
