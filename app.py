@@ -58,7 +58,7 @@ def chat():
 
             print(f"processing combined query: {combined_query}")
 
-            task = llm_call.delay(combined_query)
+            task = llm_call.delay(combined_query, state_provided)
             return jsonify(
                 {
                     "success": True,
@@ -82,7 +82,7 @@ def chat():
                     combined_query = f"{input} for {last_state}"
                     print(f"using previous state ({last_state}): {combined_query}")
 
-                    task = llm_call.delay(combined_query)
+                    task = llm_call.delay(combined_query, last_state)
                     return jsonify(
                         {
                             "success": True,
@@ -115,7 +115,7 @@ def chat():
                 session["last_state"] = state_result.strip()
                 print(f"State detected and saved: {state_result}")
 
-                task = llm_call.delay(input)
+                task = llm_call.delay(input, state_result)
                 return jsonify(
                     {
                         "success": True,

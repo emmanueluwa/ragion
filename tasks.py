@@ -45,7 +45,7 @@ r = redis.Redis.from_url(redis_url, decode_responses=True, ssl_cert_reqs=None)
 
 
 # TODO: Make jurisdiction dynamic
-def get_rag_chain():
+def get_rag_chain(county):
     embeddings = download_hugging_face_embeddings()
 
     index_name = "ragion"
@@ -59,7 +59,7 @@ def get_rag_chain():
     # By default, similarity search ignores metadata unless you explicitly filter or boost based on it.
     retriever = docsearch.as_retriever(
         search_type="similarity",
-        search_kwargs={"k": 5, "filter": {"jurisdiction": "Manatee County, Florida"}},
+        search_kwargs={"k": 5, "filter": {"jurisdiction": county}},
     )
 
     llm = GoogleGenerativeAI(
@@ -116,11 +116,11 @@ def llm_get_state(msg):
 
 
 @celery_app.task(name="tasks.llm_call")
-def llm_call(msg):
+def llm_call(msg, county):
     """
     Main RAG chain call for answering user questions
     """
-    rag_chain = get_rag_chain()
+    rag_chain = get_rag_chain(county)
     try:
         response = rag_chain.invoke({"input": msg})
         answer = str(response["answer"])
