@@ -114,7 +114,7 @@ celery -A tasks worker --loglevel=info
 
 ## Demo
 
-<!-- > _Add screenshots or a link to a demo video here._ -->
+[![Watch the demo](static/images/ragion-yt-thumbnail.png)](https://www.youtube.com/watch?v=mlRw6PO-Dok)
 
 ---
 
