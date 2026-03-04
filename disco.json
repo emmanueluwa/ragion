@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "services": {
+    "web": {
+      "port": 8000,
+      "command": "gunicorn --bind 0.0.0.0:8000 app:app"
+    }
+  }
+}
