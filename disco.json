@@ -4,10 +4,9 @@
     "web": {
       "port": 8000,
       "command": "gunicorn --bind 0.0.0.0:8000 app:app"
+    },
+    "worker": {
+      "command": "celery -A tasks worker --loglevel=info --concurrency 2"
     }
-  },
-  "celery": {
-    "command": "celery -A tasks worker --loglevel=info",
-    "scale": 2
   }
 }
