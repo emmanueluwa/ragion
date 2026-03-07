@@ -15,13 +15,16 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY")
 
 # redis connection for progress tracking
-redis_endpoint = os.environ.get("REDIS_ENDPOINT")
+redis_endpoint = os.environ.get("REDIS_ENDPOINT", "172.18.0.1")
 redis_port = os.environ.get("REDIS_PORT", "6379")
 redis_password = os.environ.get("REDIS_PASSWORD")
 
-redis_url = f"rediss://default:{redis_password}@{redis_endpoint}:{redis_port}"
-# TODO: add  ssl_cert_reqs='required' to from_url in production
-r = redis.Redis.from_url(redis_url, decode_responses=True, ssl_cert_reqs=None)
+if redis_password:
+    redis_url = f"redis://:{redis_password}@{redis_endpoint}:{redis_port}/0"
+else:
+    redis_url = f"redis://:{redis_password}:{redis_port}/0"
+
+r = redis.Redis.from_url(redis_url, decode_responses=True)
 
 # storing indexing progress by task ID
 indexing_progress = {}
