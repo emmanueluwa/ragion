@@ -22,7 +22,7 @@ redis_password = os.environ.get("REDIS_PASSWORD")
 if redis_password:
     redis_url = f"redis://:{redis_password}@{redis_endpoint}:{redis_port}/0"
 else:
-    redis_url = f"redis://:{redis_password}:{redis_port}/0"
+    redis_url = f"redis://:{redis_endpoint}:{redis_port}/0"
 
 r = redis.Redis.from_url(redis_url, decode_responses=True)
 
