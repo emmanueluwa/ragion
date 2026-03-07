@@ -9,6 +9,7 @@ langchain_google_genai==4.2.1
 langchain_huggingface==1.2.1
 langchain_pinecone==0.2.13
 pinecone-client==4.1.2
+pypdf>=3.0.0
 python-dotenv==1.2.2
 redis==5.2.1
 setuptools==75.8.0
