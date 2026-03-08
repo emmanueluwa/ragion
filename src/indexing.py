@@ -37,7 +37,8 @@ def index_document(
 ):
     if progress_callback:
         progress_callback(10, "Loading PDF")
-    extracted_data = load_pdf_file(data="data/")
+
+    extracted_data = load_pdf_file(data=file_path)
 
     if progress_callback:
         progress_callback(30, "Splitting document")
@@ -46,25 +47,28 @@ def index_document(
 
     chunk_size = 800-1200 for technical docs
     """
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=200)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=400)
     text_chunks = text_splitter.split_documents(extracted_data)
 
     if progress_callback:
         progress_callback(50, "Adding metadata")
+
     for chunk in text_chunks:
-        # prepend county to chunk text
+        # prepend county to improve sementic search
         chunk.page_content = f"Jurisdiction: {county}. {chunk.page_content}"
-        print({county, chunk.page_content})
 
         chunk.metadata.update(
             {
                 "jurisdiction": county,
                 "document": description,
+                "page": chunk.metadata.get("page", "unknown"),
+                "source": os.path.basename(file_path),
             }
         )
 
     if progress_callback:
         progress_callback(70, "Preparing pinecone index")
+
     embeddings = download_hugging_face_embeddings()
 
     try:
@@ -85,7 +89,7 @@ def index_document(
     if progress_callback:
         progress_callback(90, "Upserting to pinecone")
     # embedding each chunk and upsert the embeddings into pinecone index
-    docsearch = PineconeVectorStore.from_documents(
+    PineconeVectorStore.from_documents(
         documents=text_chunks, index_name=index_name, embedding=embeddings
     )
 

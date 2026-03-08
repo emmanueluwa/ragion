@@ -64,10 +64,15 @@ def get_rag_chain(county):
         embedding=embeddings,
     )
 
+    if county and county.strip().lower() != "none":
+        search_kwargs = {"k": 8, "filter": {"jurisdiction": county}}
+    else:
+        search_kwargs = {"k": 8}
+
     # By default, similarity search ignores metadata unless you explicitly filter or boost based on it.
     retriever = docsearch.as_retriever(
         search_type="similarity",
-        search_kwargs={"k": 5, "filter": {"jurisdiction": county}},
+        search_kwargs=search_kwargs,
     )
 
     llm = GoogleGenerativeAI(
@@ -82,6 +87,7 @@ def get_rag_chain(county):
     )
 
     question_answer_chain = create_stuff_documents_chain(llm, prompt)
+
     return create_retrieval_chain(retriever, question_answer_chain)
 
 
