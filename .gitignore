@@ -1,3 +1,69 @@
+# Environment
 .env
-venv
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+.eggs/
+wheels/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs
+*.log
+logs/
+my_log.log
+
+# Data and uploads
+data/
+*.pdf
+*.csv
+*.xlsx
+
+# ML / HuggingFace model cache
+.cache/
+models/
+*.bin
+*.pt
+*.pth
+*.onnx
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# Project specific
 design_document.md
+fly.toml
+ragion.egg-info/
+store_index.py
+todo
+research/
