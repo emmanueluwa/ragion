@@ -38,7 +38,8 @@ def index_document(
     if progress_callback:
         progress_callback(10, "Loading PDF")
 
-    extracted_data = load_pdf_file(data=file_path)
+    abs_file_path = os.path.abspath(file_path)
+    extracted_data = load_pdf_file(data=abs_file_path)
 
     if progress_callback:
         progress_callback(30, "Splitting document")

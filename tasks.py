@@ -52,7 +52,6 @@ r = redis.Redis.from_url(
 )
 
 
-# TODO: Make jurisdiction dynamic
 def get_rag_chain(county):
     embeddings = download_hugging_face_embeddings()
 
@@ -96,8 +95,6 @@ def llm_get_state(msg):
     """
     Detecting if a U.S state is mentioned in the user's question
     """
-    # model = genai.GenerativeModel(model_name="models/gemini-2.0-flash")
-    # model = genai.GenerativeModel(model_name="models/gemini-1.5-pro-latest")
     model = genai.GenerativeModel(model_name="gemini-3.1-pro-preview")
 
     chat_session = model.start_chat()

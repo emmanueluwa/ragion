@@ -182,7 +182,11 @@ def upload():
     filename = secure_filename(file.filename)
     # saving file
     file_id = str(uuid.uuid4())
-    file_path = f"data/{file_id}_{file.filename}"
+    file_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "data",
+        f"{file_id}_{secure_filename(file.filename)}",
+    )
     file.save(file_path)
 
     # start indexing task
