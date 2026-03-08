@@ -71,7 +71,7 @@ def get_rag_chain(county):
     )
 
     llm = GoogleGenerativeAI(
-        model="models/gemini-2.0-flash", google_api_key=GOOGLE_API_KEY
+        model="models/gemini-1.5-flash", google_api_key=GOOGLE_API_KEY
     )
 
     prompt = ChatPromptTemplate.from_messages(
@@ -92,7 +92,7 @@ def llm_get_state(msg):
     """
     # model = genai.GenerativeModel(model_name="models/gemini-2.0-flash")
     # model = genai.GenerativeModel(model_name="models/gemini-1.5-pro-latest")
-    model = genai.GenerativeModel(model_name="models/gemini-2.0-flash")
+    model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
 
     chat_session = model.start_chat()
 
