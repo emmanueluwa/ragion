@@ -10,6 +10,5 @@
       "command": "celery -A tasks worker --loglevel=info --concurrency 2",
       "volumes": ["uploads:/app/data"]
     }
-  },
-  "volumes": { "uploads": {} }
+  }
 }
