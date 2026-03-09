@@ -3,10 +3,13 @@
   "services": {
     "web": {
       "port": 8000,
-      "command": "gunicorn --bind 0.0.0.0:8000 app:app"
+      "command": "gunicorn --bind 0.0.0.0:8000 --workers 2 --timeout 120 app:app",
+      "volumes": ["uploads:/app/data"]
     },
     "worker": {
-      "command": "celery -A tasks worker --loglevel=info --concurrency 2"
+      "command": "celery -A tasks worker --loglevel=info --concurrency 2",
+      "volumes": ["uploads:/app/data"]
     }
-  }
+  },
+  "volumes": { "uploads": {} }
 }
