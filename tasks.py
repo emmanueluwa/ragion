@@ -9,12 +9,15 @@ from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 import google.generativeai as genai
 import redis
+import boto3
+from botocore.client import Config
 
 from src.prompt import *
 from src.indexing import index_document
 
 import os
 import logging
+import tempfile
 
 load_dotenv()
 indexing_progress = {}
@@ -30,6 +33,7 @@ logger.addHandler(handler)
 
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+S3_BUCKET = os.environ.get("S3_BUCKET_NAME")
 
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
@@ -49,6 +53,15 @@ else:
 r = redis.Redis.from_url(
     redis_url,
     decode_responses=True,
+)
+
+# s3 client pointing to hetzner object storage
+s3 = boto3.client(
+    "s3",
+    endpoint_url=os.environ.get("S3_ENDPOINT_URL"),
+    aws_access_key_id=os.environ.get("S3_ACCESS_KEY"),
+    aws_secret_access_key=os.environ.get("S3_SECRET_KEY"),
+    config=Config(signature_version="s3v4"),
 )
 
 
@@ -92,9 +105,6 @@ def get_rag_chain(county):
 
 @celery_app.task(name="tasks.llm_get_state")
 def llm_get_state(msg):
-    """
-    Detecting if a U.S state is mentioned in the user's question
-    """
     model = genai.GenerativeModel(model_name="gemini-3.1-pro-preview")
 
     chat_session = model.start_chat()
@@ -117,9 +127,8 @@ def llm_get_state(msg):
         """
 
         response = chat_session.send_message(initial_prompt)
-        result = response.text.strip()
 
-        return result
+        return response.text.strip()
 
     except Exception as e:
         print(f"Error in llm_get_state: {e}")
@@ -146,17 +155,32 @@ def llm_call(msg, county):
 
 
 @celery_app.task(bind=True)
-def process_file(self, file_path, file_id, county, description):
+def process_file(self, s3_key, file_id, county, description):
     def progress_callback(percent, status):
         r.hset(self.request.id, mapping={"percent": percent, "status": status})
         r.expire(self.request.id, 3600)  # 1hr
 
+    # download file from object storage to temp file
+    tmp_path = None
+
     try:
+        progress_callback(10, "Downloading file")
+
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            s3.download_fileobj(S3_BUCKET, s3_key, tmp)
+            tmp_path = tmp.name
+
         index_document(
-            file_path, county, description, progress_callback=progress_callback
+            tmp_path, county, description, progress_callback=progress_callback
         )
+
         progress_callback(100, "Indexing complete")
 
     except Exception as e:
         progress_callback(100, f"Error: {str(e)}")
         raise
+
+    finally:
+        # cleaning up temp file
+        if tmp_path and os.path.exists(tmp_path):
+            os.remove(tmp_path)
