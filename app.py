@@ -211,6 +211,7 @@ def upload():
         return jsonify({"error": "no files added"}), 400
 
     file = request.files["file"]
+    county = request.form.get("county", "")
     description = request.form.get("description", "")
 
     if file.filename == "":
@@ -231,6 +232,7 @@ def upload():
         user_id=current_user.id,
         filename=filename,
         s3_key=s3_key,
+        county=county,
         description=description,
         status="processing",
     )
@@ -238,7 +240,7 @@ def upload():
     db.session.commit()
 
     # start indexing task
-    task = process_file.delay(s3_key, file_id, description)
+    task = process_file.delay(s3_key, file_id, county, description)
 
     return jsonify({"task_id": task.id, "file_id": file_id})
 
