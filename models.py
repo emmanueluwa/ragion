@@ -36,6 +36,7 @@ class Document(db.Model):
     user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
     filename = db.Column(db.String(500), nullable=False)
     s3_key = db.Column(db.String(500), nullable=False)
+    county = db.Column(db.String(255), nullable=True)
     description = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(50), default="processing", nullable=False)
     uploaded_at = db.Column(
@@ -48,6 +49,7 @@ class Document(db.Model):
         return {
             "id": self.id,
             "filename": self.filename,
+            "county": self.county,
             "description": self.description,
             "status": self.status,
             "uploaded_at": self.uploaded_at.isoformat(),
