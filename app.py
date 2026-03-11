@@ -2,7 +2,7 @@ import os
 import uuid
 import boto3
 from botocore.client import Config
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Flask, render_template, jsonify, request, session
 from flask_login import current_user, login_required
@@ -124,7 +124,7 @@ def chat():
         else:
             # checking if state is mentioned in new question
             state_task = llm_get_state.delay(input)
-            state_result = state_task.get(timeout=7)
+            state_result = state_task.get(timeout=30)
 
             if state_result.strip().lower() == "none":
                 last_state = session.get("last_state")
@@ -290,7 +290,7 @@ def get_index_progress(task_id):
 
         if doc:
             doc.status = "indexed"
-            doc.indexed_at = datetime.utcnow()
+            doc.indexed_at = datetime.now(timezone.utc)
             db.session.commit()
 
     return jsonify({"percent": percent, "status": status})

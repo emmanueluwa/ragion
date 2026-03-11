@@ -76,15 +76,10 @@ def get_rag_chain(county):
         embedding=embeddings,
     )
 
-    if county and county.strip().lower() != "none":
-        search_kwargs = {"k": 8, "filter": {"jurisdiction": county}}
-    else:
-        search_kwargs = {"k": 8}
-
     # By default, similarity search ignores metadata unless you explicitly filter or boost based on it.
     retriever = docsearch.as_retriever(
         search_type="similarity",
-        search_kwargs=search_kwargs,
+        search_kwargs={"k": 8},
     )
 
     llm = GoogleGenerativeAI(
@@ -142,13 +137,16 @@ def llm_call(msg, county):
     """
     rag_chain = get_rag_chain(county)
     try:
-        response = rag_chain.invoke({"input": msg})
-        answer = str(response["answer"])
-        print("llm query task complete :)")
-        return answer
+        if county and county.strip().lower() != "none":
+            query = f"{msg} in {county}"
+        else:
+            query = msg
+
+        response = rag_chain.invoke({"input": query})
+
+        return str(response["answer"])
 
     except Exception as e:
-        print(f"Error in llm_call: {e}")
         return (
             f"Sorry, an error was encountered when processing your question: {str(e)}"
         )
