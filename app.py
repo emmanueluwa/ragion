@@ -42,6 +42,10 @@ def create_app():
     login_manager.init_app(app)
     login_manager.login_view = "auth.login"
 
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(user_id)
+
     # register blueprints
     app.register_blueprint(auth_blueprint)
 
@@ -76,10 +80,6 @@ s3 = boto3.client(
 )
 
 S3_BUCKET = os.environ.get("S3_BUCKET_NAME")
-
-
-def load_user(user_id):
-    return User.query.get(user_id)
 
 
 @app.route("/")
