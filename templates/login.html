@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Login - SwiftCiv</title>
+  </head>
+  <body>
+    <h2>Sign in</h2>
+    <form method="POST" action="/login">
+      <input type="email" name="email" placeholder="your@email.com" required />
+      <button type="submit">Send magic link</button>
+    </form>
+    {% with messages = get_flashed_messages(with_categories=true) %} {% for
+    category, message in messages %}
+    <p>{{ message }}</p>
+    {% endfor %} {% endwith %}
+  </body>
+</html>
