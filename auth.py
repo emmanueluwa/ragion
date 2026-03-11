@@ -50,8 +50,7 @@ def login():
 
 @auth.route("/login", methods=["POST"])
 def request_magic_link():
-    data = request.get_json()
-    email = data.get("email", "").strip().lower()
+    email = request.form.get("email") or (request.get_json() or {}).get("email")
 
     if not email or "@" not in email:
         return jsonify({"error": "Valid email required"}), 400
