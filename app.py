@@ -2,19 +2,57 @@ import os
 import uuid
 import boto3
 from botocore.client import Config
+from datetime import datetime
 
 from flask import Flask, render_template, jsonify, request, session
+from flask_login import current_user, login_required
 from tasks import llm_get_state, llm_call, process_file
 from werkzeug.utils import secure_filename
 from celery_config import celery_app
 
 import redis
 
+from models import Document, db, User
+from extensions import mail, login_manager
+from auth import auth as auth_blueprint
+
 celery_app.autodiscover_tasks(["tasks"], force=True)
 
-app = Flask(__name__)
 
-app.secret_key = os.environ.get("SECRET_KEY")
+def create_app():
+    app = Flask(__name__)
+
+    # config
+    app.secret_key = os.environ.get("SECRET_KEY")
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    # mail config
+    app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+    app.config["MAIL_PORT"] = int(os.environ.get("MAIL_PORT", 587))
+    app.config["MAIL_USE_TLS"] = True
+    app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME")
+    app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD")
+    app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_USERNAME")
+
+    # initialise extenstions
+    db.init_app(app)
+    mail.init_app(app)
+    login_manager.init_app(app)
+    login_manager.login_view = "auth.login"
+
+    # register blueprints
+    app.register_blueprint(auth_blueprint)
+
+    # creating tables
+    with app.app_context():
+        db.create_all()
+
+    return app
+
+
+app = create_app()
 
 # redis connection for progress tracking
 redis_endpoint = os.environ.get("REDIS_ENDPOINT", "172.18.0.1")
@@ -39,22 +77,26 @@ s3 = boto3.client(
 
 S3_BUCKET = os.environ.get("S3_BUCKET_NAME")
 
-# storing indexing progress by task ID
-indexing_progress = {}
+
+def load_user(user_id):
+    return User.query.get(user_id)
 
 
 @app.route("/")
+@login_required
 def index():
     return render_template("index.html")
 
 
 # routes
 @app.route("/get", methods=["GET", "POST"])
+@login_required
 def chat():
     try:
+        from tasks import llm_get_state, llm_call
+
         msg = request.form["msg"]
         input = msg.strip()
-        print(f"User input: {input}")
 
         # checking to see if we are waiting for a State from the user
         if "waiting_for_state" in session and session["waiting_for_state"]:
@@ -75,7 +117,6 @@ def chat():
                 {
                     "success": True,
                     "task_id": task.id,
-                    "combined_query": combined_query,
                     "needs_state": False,
                 }
             )
@@ -97,8 +138,6 @@ def chat():
                         {
                             "success": True,
                             "task_id": task.id,
-                            "used_previous_state": last_state,
-                            "combined_query": combined_query,
                             "needs_state": False,
                         }
                     )
@@ -113,7 +152,6 @@ def chat():
                             "success": True,
                             "response": "For which county would you like to know this information?",
                             "needs_state": True,
-                            "original_question": input,
                         }
                     )
 
@@ -127,7 +165,6 @@ def chat():
                     {
                         "success": True,
                         "task_id": task.id,
-                        "state_detected": state_result,
                         "needs_state": False,
                     }
                 )
@@ -141,8 +178,11 @@ def chat():
 
 # checking status of task
 @app.route("/check_task/<task_id>", methods=["GET"])
+@login_required
 def check_task(task_id):
     try:
+        from tasks import celery_app
+
         task = celery_app.AsyncResult(task_id)
 
         if task.state == "SUCCESS":
@@ -163,29 +203,71 @@ def check_task(task_id):
 
 # uploading documents for chatbot reference
 @app.route("/upload", methods=["POST"])
+@login_required
 def upload():
+    from tasks import process_file
+
     if "file" not in request.files:
         return jsonify({"error": "no files added"}), 400
 
     file = request.files["file"]
-    county = request.form.get("county", "")
     description = request.form.get("description", "")
 
     if file.filename == "":
         return jsonify({"error": "No file selected"}), 400
 
     file_id = str(uuid.uuid4())
-    filename = f"{file_id}_{secure_filename(file.filename)}"
+    filename = secure_filename(file.filename)
+    s3_key = f"{current_user.id}/{file_id}_{filename}"
 
     # upload to object storage
     s3.upload_fileobj(
-        file, S3_BUCKET, filename, ExtraArgs={"ContentType": "application/pdf"}
+        file, S3_BUCKET, s3_key, ExtraArgs={"ContentType": "application/pdf"}
     )
 
+    # save to db
+    doc = Document(
+        id=file_id,
+        user_id=current_user.id,
+        filename=filename,
+        s3_key=s3_key,
+        description=description,
+        status="processing",
+    )
+    db.session.add(doc)
+    db.session.commit()
+
     # start indexing task
-    task = process_file.delay(filename, file_id, county, description)
+    task = process_file.delay(s3_key, file_id, description)
 
     return jsonify({"task_id": task.id, "file_id": file_id})
+
+
+@app.route("/documents", methods=["GET"])
+@login_required
+def get_documents():
+    docs = (
+        Document.query.filter_by(user_id=current_user.id)
+        .order_by(Document.uploaded_at.desc())
+        .all()
+    )
+
+    return jsonify([doc.to_dict() for doc in docs])
+
+
+@app.route("/documents/<doc_id>", methods=["DELETE"])
+@login_required
+def delete_docuemnt(doc_id):
+    doc = Document.query.filter_by(id=doc_id, user_id=current_user.id).first()
+    if not doc:
+        return jsonify({"error": "Document not found"}), 404
+
+    s3.delete_object(Bucket=S3_BUCKET, Key=doc.s3_key)
+
+    db.session.delete(doc)
+    db.session.commit()
+
+    return jsonify({"message": "Document deleted"}), 200
 
 
 @app.route("/index_progress/<task_id>")
@@ -197,6 +279,17 @@ def get_index_progress(task_id):
     progress = r.hgetall(task_id)
     percent = progress.get("percent", 0)
     status = progress.get("status", "Starting...")
+
+    # update document status in db
+    if str(percent) == "100" and status == "Indexing complete":
+        doc = Document.query.filter_by(
+            user_id=current_user.id, status="processing"
+        ).first()
+
+        if doc:
+            doc.status = "indexed"
+            doc.indexed_at = datetime.utcnow()
+            db.session.commit()
 
     return jsonify({"percent": percent, "status": status})
 
