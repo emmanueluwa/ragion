@@ -56,7 +56,7 @@ def index_document(
 
     for chunk in text_chunks:
         # prepend county to improve sementic search
-        chunk.page_content = f"Jurisdiction: {county}. {chunk.page_content}"
+        chunk.page_content = f"Jurisdiction: {county}. Page: {chunk.metadata.get('page_label', 'unknown')}. {chunk.page_content}"
 
         chunk.metadata.update(
             {
