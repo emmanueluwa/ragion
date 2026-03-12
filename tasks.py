@@ -79,7 +79,7 @@ def get_rag_chain(county):
     # By default, similarity search ignores metadata unless you explicitly filter or boost based on it.
     retriever = docsearch.as_retriever(
         search_type="similarity",
-        search_kwargs={"k": 8},
+        search_kwargs={"k": 15},
     )
 
     llm = GoogleGenerativeAI(

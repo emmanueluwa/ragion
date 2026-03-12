@@ -48,7 +48,7 @@ def index_document(
 
     chunk_size = 800-1200 for technical docs
     """
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=400)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1200, chunk_overlap=600)
     text_chunks = text_splitter.split_documents(extracted_data)
 
     if progress_callback:
