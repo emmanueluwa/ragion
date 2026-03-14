@@ -3,7 +3,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 import pytesseract
-from pdf2imge import convert_from_path
+from pdf2image import convert_from_path
 import os
 
 
@@ -21,7 +21,7 @@ def load_pdf_file(data):
 
     for doc in documents:
         if len(doc.page_content.strip()) < 50:
-            ocr_needed_pages.append(doc.metadat.get("page", 0))
+            ocr_needed_pages.append(doc.metadata.get("page", 0))
         else:
             enhanced_documents.append(doc)
 
