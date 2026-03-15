@@ -1,0 +1,1336 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SwiftCiv — The AI Code Assistant for Civil Engineers</title>
+    <meta
+      name="description"
+      content="Stop wrestling with ChatGPT. Get verbatim regulatory quotes with exact page and section citations — every time."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #faf9f7;
+        --white: #ffffff;
+        --text: #111111;
+        --text-2: #555555;
+        --text-3: #999999;
+        --border: rgba(0, 0, 0, 0.08);
+        --border-mid: rgba(0, 0, 0, 0.14);
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        font-family: "Inter", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* ── NAV ── */
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: rgba(250, 249, 247, 0.88);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+      }
+
+      .nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        text-decoration: none;
+      }
+
+      .nav-logo-mark {
+        width: 28px;
+        height: 28px;
+        background: var(--text);
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .nav-logo-mark svg {
+        color: white;
+      }
+
+      .nav-logo-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: -0.01em;
+      }
+
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nav-link {
+        font-size: 14px;
+        color: var(--text-2);
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 7px;
+        transition:
+          color 0.12s,
+          background 0.12s;
+      }
+
+      .nav-link:hover {
+        color: var(--text);
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      .nav-cta {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--white);
+        background: var(--text);
+        text-decoration: none;
+        padding: 8px 18px;
+        border-radius: 8px;
+        transition: opacity 0.12s;
+      }
+
+      .nav-cta:hover {
+        opacity: 0.82;
+      }
+
+      /* ── HERO ── */
+      .hero {
+        padding: 140px 24px 80px;
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--white);
+        border: 1px solid var(--border-mid);
+        border-radius: 100px;
+        padding: 5px 14px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-2);
+        margin-bottom: 28px;
+      }
+
+      .hero-badge-dot {
+        width: 6px;
+        height: 6px;
+        background: #22c55e;
+        border-radius: 50%;
+      }
+
+      .hero-h1 {
+        font-size: clamp(38px, 6vw, 64px);
+        font-weight: 700;
+        line-height: 1.1;
+        letter-spacing: -0.03em;
+        color: var(--text);
+        margin-bottom: 22px;
+      }
+
+      .hero-h1 em {
+        font-style: italic;
+        font-weight: 300;
+      }
+
+      .hero-sub {
+        font-size: clamp(16px, 2vw, 19px);
+        color: var(--text-2);
+        max-width: 540px;
+        margin: 0 auto 36px;
+        line-height: 1.6;
+        font-weight: 400;
+      }
+
+      .hero-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 52px;
+      }
+
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--text);
+        color: var(--white);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 500;
+        padding: 13px 26px;
+        border-radius: 10px;
+        transition: opacity 0.12s;
+        border: none;
+        cursor: pointer;
+      }
+
+      .btn-primary:hover {
+        opacity: 0.82;
+      }
+
+      .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--white);
+        color: var(--text);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 400;
+        padding: 13px 26px;
+        border-radius: 10px;
+        border: 1px solid var(--border-mid);
+        transition: all 0.12s;
+      }
+
+      .btn-secondary:hover {
+        border-color: rgba(0, 0, 0, 0.25);
+      }
+
+      .hero-proof {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--text-3);
+      }
+
+      /* ── DEMO CARD ── */
+      .demo-wrap {
+        max-width: 760px;
+        margin: 0 auto 100px;
+        padding: 0 24px;
+      }
+
+      .demo-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow:
+          0 4px 24px rgba(0, 0, 0, 0.07),
+          0 1px 4px rgba(0, 0, 0, 0.04);
+      }
+
+      .demo-topbar {
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .demo-dots {
+        display: flex;
+        gap: 5px;
+      }
+      .demo-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--border-mid);
+      }
+
+      .demo-url {
+        flex: 1;
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 11px;
+        color: var(--text-3);
+        text-align: center;
+      }
+
+      .demo-body {
+        padding: 24px;
+      }
+
+      .demo-exchange {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .demo-q {
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .demo-q-bubble {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 14px 14px 4px 14px;
+        padding: 10px 15px;
+        font-size: 14px;
+        color: var(--text);
+        max-width: 78%;
+      }
+
+      .demo-a {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .demo-avatar {
+        width: 24px;
+        height: 24px;
+        background: var(--text);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .demo-answer {
+        font-size: 14px;
+        color: var(--text);
+        line-height: 1.65;
+      }
+
+      .demo-quote {
+        border-left: 2px solid var(--border-mid);
+        padding: 6px 12px;
+        margin: 8px 0;
+        font-style: italic;
+        color: var(--text-2);
+        font-size: 13px;
+        background: var(--bg);
+        border-radius: 0 6px 6px 0;
+      }
+
+      .demo-cite {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 3px 8px;
+        font-size: 11px;
+        color: var(--text-3);
+        margin-top: 6px;
+      }
+
+      /* ── SECTION SHARED ── */
+      section {
+        padding: 80px 24px;
+      }
+
+      .section-inner {
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      .section-label {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-3);
+        margin-bottom: 12px;
+      }
+
+      .section-h2 {
+        font-size: clamp(28px, 4vw, 42px);
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        line-height: 1.15;
+        color: var(--text);
+        margin-bottom: 16px;
+      }
+
+      .section-sub {
+        font-size: 17px;
+        color: var(--text-2);
+        max-width: 520px;
+        line-height: 1.6;
+      }
+
+      /* ── PROBLEM SECTION ── */
+      .problem-bg {
+        background: var(--text);
+        color: var(--white);
+      }
+
+      .problem-bg .section-label {
+        color: rgba(255, 255, 255, 0.4);
+      }
+      .problem-bg .section-h2 {
+        color: var(--white);
+      }
+      .problem-bg .section-sub {
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .problem-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        overflow: hidden;
+        margin-top: 48px;
+      }
+
+      .problem-item {
+        background: var(--text);
+        padding: 28px 24px;
+      }
+
+      .problem-icon {
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 14px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .problem-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--white);
+        margin-bottom: 6px;
+      }
+
+      .problem-desc {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.5);
+        line-height: 1.6;
+      }
+
+      /* ── FEATURES ── */
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-top: 52px;
+      }
+
+      .feature-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 24px;
+        transition: border-color 0.15s;
+      }
+
+      .feature-card:hover {
+        border-color: var(--border-mid);
+      }
+
+      .feature-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--bg);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        color: var(--text-2);
+      }
+
+      .feature-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 7px;
+      }
+
+      .feature-desc {
+        font-size: 13px;
+        color: var(--text-2);
+        line-height: 1.65;
+      }
+
+      /* ── HOW IT WORKS ── */
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 32px;
+        margin-top: 52px;
+      }
+
+      .step {
+        position: relative;
+      }
+
+      .step-num {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--text-3);
+        margin-bottom: 12px;
+      }
+
+      .step-title {
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+
+      .step-desc {
+        font-size: 14px;
+        color: var(--text-2);
+        line-height: 1.6;
+      }
+
+      .step-divider {
+        height: 1px;
+        background: var(--border);
+        width: 100%;
+        margin-bottom: 24px;
+      }
+
+      /* ── PRICING ── */
+      .pricing-wrap {
+        max-width: 420px;
+        margin: 52px auto 0;
+      }
+
+      .pricing-card {
+        background: var(--white);
+        border: 1px solid var(--border-mid);
+        border-radius: 18px;
+        padding: 32px;
+        text-align: center;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+      }
+
+      .pricing-plan {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-3);
+        margin-bottom: 16px;
+      }
+
+      .pricing-amount {
+        font-size: 56px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: var(--text);
+        line-height: 1;
+        margin-bottom: 4px;
+      }
+
+      .pricing-period {
+        font-size: 14px;
+        color: var(--text-3);
+        margin-bottom: 28px;
+      }
+
+      .pricing-features {
+        list-style: none;
+        margin-bottom: 28px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .pricing-features li {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 14px;
+        color: var(--text-2);
+        text-align: left;
+      }
+
+      .pricing-check {
+        width: 18px;
+        height: 18px;
+        background: var(--bg);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: var(--text);
+      }
+
+      .pricing-divider {
+        height: 1px;
+        background: var(--border);
+        margin-bottom: 24px;
+      }
+
+      .pricing-cta {
+        display: block;
+        width: 100%;
+        background: var(--text);
+        color: var(--white);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 500;
+        padding: 14px;
+        border-radius: 10px;
+        transition: opacity 0.12s;
+        border: none;
+        cursor: pointer;
+      }
+
+      .pricing-cta:hover {
+        opacity: 0.82;
+      }
+
+      .pricing-note {
+        font-size: 12px;
+        color: var(--text-3);
+        margin-top: 12px;
+      }
+
+      /* ── CTA BANNER ── */
+      .cta-banner {
+        background: var(--text);
+        border-radius: 18px;
+        padding: 60px 40px;
+        text-align: center;
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
+      .cta-banner h2 {
+        font-size: clamp(26px, 4vw, 38px);
+        font-weight: 700;
+        letter-spacing: -0.025em;
+        color: var(--white);
+        margin-bottom: 14px;
+        line-height: 1.2;
+      }
+
+      .cta-banner p {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.55);
+        margin-bottom: 30px;
+      }
+
+      .cta-banner .btn-white {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--white);
+        color: var(--text);
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 500;
+        padding: 13px 26px;
+        border-radius: 10px;
+        transition: opacity 0.12s;
+      }
+
+      .cta-banner .btn-white:hover {
+        opacity: 0.9;
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 32px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+
+      .footer-logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+      }
+
+      .footer-logo-mark {
+        width: 24px;
+        height: 24px;
+        background: var(--text);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .footer-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .footer-copy {
+        font-size: 13px;
+        color: var(--text-3);
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 20px;
+      }
+
+      .footer-links a {
+        font-size: 13px;
+        color: var(--text-3);
+        text-decoration: none;
+        transition: color 0.12s;
+      }
+
+      .footer-links a:hover {
+        color: var(--text-2);
+      }
+
+      /* ── RESPONSIVE ── */
+      @media (max-width: 640px) {
+        nav {
+          padding: 0 18px;
+        }
+        .hero {
+          padding: 110px 18px 60px;
+        }
+        .demo-wrap {
+          padding: 0 16px;
+        }
+        section {
+          padding: 60px 18px;
+        }
+        .cta-banner {
+          padding: 40px 24px;
+        }
+        footer {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAV -->
+    <nav>
+      <a class="nav-logo" href="/">
+        <div class="nav-logo-mark">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <span class="nav-logo-name">SwiftCiv</span>
+      </a>
+      <div class="nav-right">
+        <a href="#how-it-works" class="nav-link">How it works</a>
+        <a href="#pricing" class="nav-link">Pricing</a>
+        <a href="/login" class="nav-link">Sign in</a>
+        <a href="#pricing" class="nav-cta">Get started</a>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Built for civil engineers and planners
+      </div>
+      <h1 class="hero-h1">
+        The AI that <em>actually</em> reads<br />your regulatory documents
+      </h1>
+      <p class="hero-sub">
+        Upload any county manual or design standard. Ask questions. Get verbatim
+        quotes with exact page and section citations — every time.
+      </p>
+      <div class="hero-actions">
+        <a href="#pricing" class="btn-primary">
+          Start for £50/month
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+        <a href="#demo" class="btn-secondary">See it in action</a>
+      </div>
+      <div class="hero-proof">
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
+        No hallucinations. No paraphrasing. Just the code.
+      </div>
+    </div>
+
+    <!-- DEMO CARD -->
+    <div class="demo-wrap" id="demo">
+      <div class="demo-card">
+        <div class="demo-topbar">
+          <div class="demo-dots">
+            <div class="demo-dot"></div>
+            <div class="demo-dot"></div>
+            <div class="demo-dot"></div>
+          </div>
+          <div class="demo-url">swiftciv.com</div>
+        </div>
+        <div class="demo-body">
+          <div class="demo-exchange">
+            <div class="demo-q">
+              <div class="demo-q-bubble">
+                What is the minimum drainage easement for a 24 inch RCP pipe?
+              </div>
+            </div>
+            <div class="demo-a">
+              <div class="demo-avatar">
+                <svg
+                  width="11"
+                  height="11"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="2.5"
+                >
+                  <path
+                    d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                  />
+                </svg>
+              </div>
+              <div class="demo-answer">
+                A 24-inch pipe falls under "Diameter equal to or less than 30
+                inches." The minimum easement is:
+                <div class="demo-quote">
+                  "Easement shall be 10 feet either side of the centerline of
+                  the pipe."
+                </div>
+                For cover ≥ 5 feet, minimum easement width is 20 feet.
+                <br />
+                <span class="demo-cite">
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                    />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                  Manatee County PWS · Easement Guidelines · Page 32
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROBLEM -->
+    <section class="problem-bg">
+      <div class="section-inner">
+        <div class="section-label">The problem with ChatGPT</div>
+        <h2 class="section-h2">
+          Generic AI fails engineers<br />on the details that matter
+        </h2>
+        <p class="section-sub">
+          Every civil engineer who has tried using ChatGPT for code lookups hits
+          the same four walls.
+        </p>
+        <div class="problem-grid">
+          <div class="problem-item">
+            <div class="problem-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <div class="problem-title">Forgets the county</div>
+            <div class="problem-desc">
+              It keeps giving answers without asking which jurisdiction. You
+              have to remind it every single time.
+            </div>
+          </div>
+          <div class="problem-item">
+            <div class="problem-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                />
+              </svg>
+            </div>
+            <div class="problem-title">Paraphrases regulations</div>
+            <div class="problem-desc">
+              It rewrites legal code in its own words instead of quoting
+              verbatim. That's a liability.
+            </div>
+          </div>
+          <div class="problem-item">
+            <div class="problem-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </div>
+            <div class="problem-title">No page citations</div>
+            <div class="problem-desc">
+              You can't verify anything. Where exactly is that requirement?
+              Which section? Which page?
+            </div>
+          </div>
+          <div class="problem-item">
+            <div class="problem-icon">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <div class="problem-title">Can't read your docs</div>
+            <div class="problem-desc">
+              It doesn't have access to your county's specific manual, so half
+              the answers are just hallucinated.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section>
+      <div class="section-inner">
+        <div class="section-label">What SwiftCiv does differently</div>
+        <h2 class="section-h2">
+          Built specifically<br />for regulatory lookups
+        </h2>
+        <p class="section-sub">
+          Every design decision is about getting you the right answer, reliably,
+          with full traceability.
+        </p>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+            </div>
+            <div class="feature-title">Upload your own documents</div>
+            <div class="feature-desc">
+              Upload any PDF — county stormwater manual, land development code,
+              design standards. SwiftCiv indexes every page including scanned
+              appendices.
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z" />
+              </svg>
+            </div>
+            <div class="feature-title">Verbatim quotes only</div>
+            <div class="feature-desc">
+              SwiftCiv never paraphrases. Every answer is a direct quote from
+              your document, word for word, exactly as written in the code.
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <div class="feature-title">Exact page and section</div>
+            <div class="feature-desc">
+              Every answer comes with the document name, section number, and
+              page. You can open the PDF and verify it in seconds.
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <div class="feature-title">Jurisdiction aware</div>
+            <div class="feature-desc">
+              Ask about Manatee County, Surrey, or any jurisdiction. SwiftCiv
+              automatically routes your question to the right document.
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M9 21V9" />
+              </svg>
+            </div>
+            <div class="feature-title">Works with any jurisdiction</div>
+            <div class="feature-desc">
+              US counties, UK local authorities, any planning authority
+              worldwide. If there's a PDF, SwiftCiv can answer questions about
+              it.
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            </div>
+            <div class="feature-title">Reads scanned PDFs</div>
+            <div class="feature-desc">
+              Most engineering manuals have scanned appendix pages with tables
+              and diagrams. SwiftCiv uses OCR to extract and index those too.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section
+      id="how-it-works"
+      style="
+        background: var(--white);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+      "
+    >
+      <div class="section-inner">
+        <div class="section-label">How it works</div>
+        <h2 class="section-h2">Up and running<br />in three steps</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-divider"></div>
+            <div class="step-num">01</div>
+            <div class="step-title">Upload your document</div>
+            <div class="step-desc">
+              Upload any PDF — county manual, design standard, land development
+              code. Add the jurisdiction name and a brief description.
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-divider"></div>
+            <div class="step-num">02</div>
+            <div class="step-title">Ask your question</div>
+            <div class="step-desc">
+              Type any regulatory question in plain English. No special syntax,
+              no prompt engineering required.
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-divider"></div>
+            <div class="step-num">03</div>
+            <div class="step-title">Get the exact quote</div>
+            <div class="step-desc">
+              Receive a verbatim quote from the document with the section number
+              and page. Verify it yourself in seconds.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing">
+      <div class="section-inner" style="text-align: center">
+        <div class="section-label">Pricing</div>
+        <h2 class="section-h2">Simple, honest pricing</h2>
+        <p class="section-sub" style="margin: 0 auto 0">
+          One plan. Everything included. Cancel any time.
+        </p>
+        <div class="pricing-wrap">
+          <div class="pricing-card">
+            <div class="pricing-plan">Pro</div>
+            <div class="pricing-amount">£50</div>
+            <div class="pricing-period">per month</div>
+            <ul class="pricing-features">
+              <li>
+                <div class="pricing-check">
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                Unlimited document uploads
+              </li>
+              <li>
+                <div class="pricing-check">
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                Unlimited questions
+              </li>
+              <!-- <li>
+                <div class="pricing-check">
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                OCR for scanned PDFs
+              </li> -->
+              <li>
+                <div class="pricing-check">
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                Verbatim quotes with page citations
+              </li>
+              <li>
+                <div class="pricing-check">
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                Any jurisdiction worldwide
+              </li>
+              <li>
+                <div class="pricing-check">
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="3"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+                Magic link login — no password needed
+              </li>
+            </ul>
+            <div class="pricing-divider"></div>
+            <a href="/checkout" class="pricing-cta">Get instant access</a>
+            <div class="pricing-note">Cancel any time. No questions asked.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section style="padding: 60px 24px 80px">
+      <div class="cta-banner">
+        <h2>Stop wrestling with ChatGPT.<br />Get the exact code.</h2>
+        <p>
+          Upload your first document and ask your first question in under 2
+          minutes.
+        </p>
+        <a href="/checkout" class="btn-white">
+          Start for £50/month
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <a class="footer-logo" href="/">
+        <div class="footer-logo-mark">
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            stroke-width="2.5"
+          >
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <span class="footer-name">SwiftCiv</span>
+      </a>
+      <span class="footer-copy">© 2026 SwiftCiv. All rights reserved.</span>
+      <div class="footer-links">
+        <a href="/login">Sign in</a>
+        <a href="mailto:hello@swiftciv.com">Contact</a>
+      </div>
+    </footer>
+  </body>
+</html>
