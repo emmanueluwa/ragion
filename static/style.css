@@ -414,6 +414,27 @@ body {
   margin-top: 8px;
 }
 
+.cite-block {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 10px;
+  line-height: 1.5;
+  max-width: 100%;
+}
+
+.cite-block svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--text-3);
+}
+
 /* Typing indicator */
 .typing {
   display: flex;
