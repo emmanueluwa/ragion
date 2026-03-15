@@ -85,7 +85,7 @@ S3_BUCKET = os.environ.get("S3_BUCKET_NAME")
 @app.route("/")
 def home():
     if current_user.is_authenticated:
-        return redirect(url_for("app"))
+        return redirect(url_for("index"))
     return render_template("landing.html")
 
 
