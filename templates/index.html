@@ -1,13 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>RAG Chatbot</title>
+    <title>Swiftciv</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     />
     <link
       rel="stylesheet"
@@ -15,437 +16,560 @@
     />
   </head>
   <body>
-    <div class="file-uploader-container">
-      <h1>Add files</h1>
-      <p class="subtitle">Add documents with information you need</p>
-      <div class="form-upload-container">
-        <img
-          class="form-upload-icon"
-          src="/static/images/icons/add-icon.svg"
-          onclick="openModal()"
-        />
-      </div>
+    <div class="app">
+      <!-- NARROW ICON BAR -->
+      <nav class="icon-bar">
+        <div class="icon-logo">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+        </div>
 
-      <!-- MODEL FORM -->
-      <div id="modal" class="modal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>Add document to knowledge base</h3>
-            <button class="close" onclick="closeModal()">&times;</button>
-          </div>
+        <!-- Documents toggle -->
+        <button
+          class="icon-btn active"
+          id="docsToggle"
+          onclick="togglePanel()"
+          title="Documents"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+          </svg>
+        </button>
 
-          <div class="modal-body">
-            <form id="upload-form" enctype="multipart/form-data">
-              <div class="file-uploader form-group">
-                <div class="upload-area" id="uploadArea">
-                  <div class="upload-icon">&#128196;</div>
-                  <p class="upload-text">
-                    Drag and drop files here or click to upload
-                  </p>
-                </div>
-                <input
-                  name="files"
-                  type="file"
-                  id="file-input"
-                  multiple
-                  required
-                />
-                <ul id="fileList"></ul>
-              </div>
-              <div class="form-group">
-                <label for="county">County &#40;if applicable&#41;</label>
-                <input
-                  name="county"
-                  type="text"
-                  id="county"
-                  class="form-control"
-                />
-              </div>
-              <div class="form-group">
-                <label for="description">Briefly describe the document</label>
-                <input
-                  name="description"
-                  type="text"
-                  id="description"
-                  class="form-control"
-                />
-              </div>
+        <!-- Upload shortcut -->
+        <button class="icon-btn" onclick="openModal()" title="Upload document">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+        </button>
 
-              <div style="text-align: right; margin-top: 25px">
-                <button
-                  type="button"
-                  class="btn btn-secondary"
-                  onclick="closeModal()"
-                >
-                  Cancel
-                </button>
-                <button type="submit" class="btn btn-primary">Save</button>
-              </div>
-            </form>
+        <!-- Sign out at bottom -->
+        <a href="/logout" class="icon-btn icon-btn-bottom" title="Sign out">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </a>
+      </nav>
+
+      <!-- DOCUMENT PANEL -->
+      <aside class="panel" id="panel">
+        <div class="panel-header">
+          <span class="panel-title">Knowledge base</span>
+        </div>
+        <div class="panel-body">
+          <button class="upload-trigger" onclick="openModal()">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add document
+          </button>
+          <div class="doc-list" id="docList">
+            <div class="empty-state">
+              No documents yet.<br />Upload a PDF to begin.
+            </div>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <div id="file-list"></div>
+      <!-- MAIN CHAT -->
+      <main class="main">
+        <div class="topbar">
+          <span class="topbar-label"
+            ><strong>Civil Code</strong> — Regulatory Assistant</span
+          >
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div class="msg-wrap">
+            <div class="msg-bot">
+              <div class="bot-avatar">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="2.5"
+                >
+                  <path
+                    d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                  />
+                </svg>
+              </div>
+              <div class="msg-bot-content">
+                Ask me anything about your uploaded regulatory documents. I'll
+                quote the exact regulation and cite the page and section.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-area">
+          <div class="input-card">
+            <textarea
+              id="userMessage"
+              placeholder="Ask about your documents..."
+              rows="1"
+            ></textarea>
+            <div class="input-actions">
+              <button class="send-btn" onclick="sendMessage()">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="2.5"
+                >
+                  <line x1="22" y1="2" x2="11" y2="13" />
+                  <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div class="input-hint">
+            Answers quoted verbatim from your uploaded documents
+          </div>
+        </div>
+      </main>
     </div>
 
-    <!-- CHATBOT SECTION -->
-    <div class="chat-container">
-      <div class="chat-header">
-        <h1>ragion consultant</h1>
-      </div>
-      <div class="chat-box" id="chatBox">
-        <div class="bot-message">
-          Hi there! I'm your County Consultant assistant. Ask me anything!
+    <!-- UPLOAD MODAL -->
+    <div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+      <div class="modal">
+        <div class="modal-head">
+          <h2>Upload document</h2>
+          <button class="modal-close" onclick="closeModal()">&times;</button>
         </div>
-      </div>
-      <div class="chat-input">
-        <form id="chatForm" method="post">
+
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept=".pdf" multiple />
+          <div class="drop-icon">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
+          <div class="drop-text">Drop PDF here or click to browse</div>
+          <div class="drop-sub">PDF files only</div>
+        </div>
+
+        <div class="file-chips" id="fileChips"></div>
+
+        <div class="field">
+          <label>Jurisdiction / County</label>
           <input
             type="text"
-            id="userMessage"
-            name="msg"
-            placeholder="Type your question here..."
-            autocomplete="off"
+            id="countyInput"
+            placeholder="e.g. manatee, orange, surrey"
           />
-          <button type="submit" id="sendButton">Send</button>
-        </form>
+        </div>
+
+        <div class="field">
+          <label
+            >Description
+            <span
+              style="font-weight: 400; text-transform: none; letter-spacing: 0"
+              >(optional)</span
+            ></label
+          >
+          <input
+            type="text"
+            id="descInput"
+            placeholder="e.g. Stormwater Design Manual 2015"
+          />
+        </div>
+
+        <div class="upload-progress" id="uploadProgress"></div>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="btn-upload" id="uploadBtn" onclick="handleUpload()">
+            Upload
+          </button>
+        </div>
       </div>
     </div>
 
     <script>
-      /*
-      DOCUMENT UPLOAD SECTION
-      */
-      // MODAL SECTION
-      function openModal() {
-        document.getElementById("modal").style.display = "block";
-        document.body.style.overflow = "hidden";
-      }
-
-      function closeModal() {
-        document.getElementById("modal").style.display = "none";
-        document.body.style.overflow = "auto";
-
-        // clear form
-        document.getElementById("fileList").innerHTML = "";
-        document.getElementById("file-input").value = "";
-        document.getElementById("county").value = "";
-        document.getElementById("description").value = "";
-      }
-
-      //close modal when clicking outside
-      window.onclick = function (event) {
-        const modal = document.getElementById("modal");
-        if (event.target == modal) {
-          closeModal();
-        }
-      };
-
-      //close modal with escape
-      document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape") {
-          closeModal();
-        }
+      /* ── TEXTAREA AUTO-RESIZE ── */
+      const ta = document.getElementById("userMessage");
+      ta.addEventListener("input", () => {
+        ta.style.height = "auto";
+        ta.style.height = Math.min(ta.scrollHeight, 130) + "px";
       });
-
-      document.querySelector(".file-uploader").addEventListener("click", () => {
-        document.getElementById("file-input").click();
-      });
-
-      //chosen document preview
-      document
-        .getElementById("file-input")
-        .addEventListener("change", function (event) {
-          const fileList = document.getElementById("fileList");
-          fileList.innerHTML = "";
-          for (const file of event.target.files) {
-            const li = document.createElement("li");
-            li.textContent = file.name;
-            fileList.appendChild(li);
-          }
-        });
-
-      document
-        .getElementById("file-input")
-        .addEventListener("click", function (event) {
-          event.stopPropagation();
-        });
-
-      //documents uploaded and being indexed
-      document
-        .getElementById("upload-form")
-        .addEventListener("submit", async (e) => {
+      ta.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
-
-          const form = e.target;
-          formData = new FormData(form);
-          const files = formData.getAll("files");
-          const county = formData.get("county");
-          const description = formData.get("description");
-          const fileList = document.getElementById("file-list");
-          // fileList.innerHTML = "";
-
-          for (const file of files) {
-            //creating progress element for each file
-            const fileDiv = createProgressElement(file.name);
-
-            fileList.appendChild(fileDiv);
-
-            const individualFormData = new FormData();
-            individualFormData.append("file", file);
-            individualFormData.append("county", county);
-            individualFormData.append("description", description);
-
-            await uploadAndIndexFile(individualFormData, fileDiv);
-          }
-
-          // clear form
-          document.getElementById("fileList").innerHTML = "";
-          document.getElementById("file-input").value = "";
-          document.getElementById("county").value = "";
-          document.getElementById("description").value = "";
-        });
-
-      async function uploadAndIndexFile(formData, container) {
-        try {
-          const uploadResponse = await fetch("/upload", {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!uploadResponse.ok) throw new Error(`Upload failed`);
-
-          //start indexing and get task ID
-          const { task_id } = await uploadResponse.json();
-
-          pollIndexProgress(task_id, container);
-        } catch (error) {
-          container.querySelector(
-            ".status"
-          ).textContent = `Error: ${error.message}`;
-          container.querySelector(".status").style.color = "red";
+          sendMessage();
         }
+      });
+
+      /* ── PANEL TOGGLE ── */
+      let panelOpen = true;
+      function togglePanel() {
+        panelOpen = !panelOpen;
+        document
+          .getElementById("panel")
+          .classList.toggle("collapsed", !panelOpen);
+        document
+          .getElementById("docsToggle")
+          .classList.toggle("active", panelOpen);
       }
 
-      async function pollIndexProgress(task_id, container) {
+      /* ── HELPERS ── */
+      function esc(t) {
+        return String(t)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function fmt(text) {
+        return text
+          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.*?)\*/g, "<em>$1</em>")
+          .replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>")
+          .replace(/\n/g, "<br>");
+      }
+
+      function scrollDown() {
+        const box = document.getElementById("chatMessages");
+        box.scrollTop = box.scrollHeight;
+      }
+
+      /* ── CHAT ── */
+      function sendMessage() {
+        const val = ta.value.trim();
+        if (!val) return;
+
+        addUserMsg(val);
+        ta.value = "";
+        ta.style.height = "auto";
+        const loadId = addLoading();
+
+        const fd = new FormData();
+        fd.append("msg", val);
+
+        fetch("/get", { method: "POST", body: fd })
+          .then((r) => r.json())
+          .then((data) => {
+            removeEl(loadId);
+            if (data.success) {
+              if (data.needs_state) {
+                ta.placeholder = "Enter county or jurisdiction...";
+                addBotMsg(data.response);
+              } else if (data.task_id) {
+                const botId = addBotMsg("Searching documents...");
+                pollTask(data.task_id, botId);
+              } else if (data.response) {
+                addBotMsg(data.response);
+              }
+            } else {
+              addBotMsg("Something went wrong. Please try again.");
+            }
+          })
+          .catch(() => {
+            removeEl(loadId);
+            addBotMsg("Something went wrong. Please try again.");
+          });
+      }
+
+      function addUserMsg(text) {
+        const box = document.getElementById("chatMessages");
+        const wrap = document.createElement("div");
+        wrap.className = "msg-wrap";
+        wrap.innerHTML = `
+      <div class="msg-user">
+        <div class="msg-user-bubble">${esc(text)}</div>
+      </div>`;
+        box.appendChild(wrap);
+        scrollDown();
+      }
+
+      function addBotMsg(text) {
+        const box = document.getElementById("chatMessages");
+        const id = "bot-" + Date.now();
+        const wrap = document.createElement("div");
+        wrap.className = "msg-wrap";
+        wrap.id = id;
+        wrap.innerHTML = `
+      <div class="msg-bot">
+        <div class="bot-avatar">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="msg-bot-content">${fmt(text)}</div>
+      </div>`;
+        box.appendChild(wrap);
+        scrollDown();
+        return id;
+      }
+
+      function addLoading() {
+        const box = document.getElementById("chatMessages");
+        const id = "load-" + Date.now();
+        const wrap = document.createElement("div");
+        wrap.className = "msg-wrap";
+        wrap.id = id;
+        wrap.innerHTML = `
+      <div class="msg-bot">
+        <div class="bot-avatar">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="msg-bot-content">
+          <div class="typing"><span></span><span></span><span></span></div>
+        </div>
+      </div>`;
+        box.appendChild(wrap);
+        scrollDown();
+        return id;
+      }
+
+      function removeEl(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+      }
+
+      function pollTask(taskId, botId) {
+        const iv = setInterval(() => {
+          fetch(`/check_task/${taskId}`)
+            .then((r) => r.json())
+            .then((d) => {
+              if (d.status === "SUCCESS") {
+                clearInterval(iv);
+                const el = document.getElementById(botId);
+                if (el)
+                  el.querySelector(".msg-bot-content").innerHTML = fmt(
+                    d.response,
+                  );
+                ta.placeholder = "Ask about your documents...";
+                scrollDown();
+              } else if (d.status === "FAILURE") {
+                clearInterval(iv);
+                const el = document.getElementById(botId);
+                if (el)
+                  el.querySelector(".msg-bot-content").textContent =
+                    "An error occurred. Please try again.";
+              }
+            })
+            .catch(() => clearInterval(iv));
+        }, 2000);
+      }
+
+      /* ── DOCUMENTS ── */
+      function loadDocuments() {
+        fetch("/documents")
+          .then((r) => r.json())
+          .then((docs) => {
+            const list = document.getElementById("docList");
+            if (!docs.length) {
+              list.innerHTML =
+                '<div class="empty-state">No documents yet.<br>Upload a PDF to begin.</div>';
+              return;
+            }
+            list.innerHTML = docs
+              .map(
+                (d) => `
+          <div class="doc-item">
+            <div class="doc-icon">PDF</div>
+            <div class="doc-info">
+              <div class="doc-name" title="${esc(d.filename)}">${esc(d.filename)}</div>
+              <div class="doc-meta">${esc(d.county || "—")}</div>
+            </div>
+            <span class="doc-pill ${d.status}">${d.status}</span>
+            <button class="doc-delete" onclick="deleteDoc('${d.id}')" title="Remove">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>`,
+              )
+              .join("");
+          });
+      }
+
+      function deleteDoc(id) {
+        if (!confirm("Remove this document from the knowledge base?")) return;
+        fetch(`/documents/${id}`, { method: "DELETE" }).then(() =>
+          loadDocuments(),
+        );
+      }
+
+      /* ── MODAL ── */
+      let selectedFiles = [];
+
+      function openModal() {
+        document.getElementById("overlay").classList.add("open");
+      }
+      function closeModal() {
+        document.getElementById("overlay").classList.remove("open");
+        document.getElementById("fileChips").innerHTML = "";
+        document.getElementById("fileInput").value = "";
+        document.getElementById("countyInput").value = "";
+        document.getElementById("descInput").value = "";
+        document.getElementById("uploadProgress").innerHTML = "";
+        document.getElementById("uploadBtn").disabled = false;
+        document.getElementById("uploadBtn").textContent = "Upload";
+        selectedFiles = [];
+      }
+
+      function handleOverlayClick(e) {
+        if (e.target === document.getElementById("overlay")) closeModal();
+      }
+
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", function () {
+          selectedFiles = Array.from(this.files);
+          document.getElementById("fileChips").innerHTML = selectedFiles
+            .map(
+              (f) => `
+      <div class="file-chip">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        ${esc(f.name)}
+      </div>`,
+            )
+            .join("");
+        });
+
+      const dz = document.getElementById("dropZone");
+      dz.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dz.classList.add("dragging");
+      });
+      dz.addEventListener("dragleave", () => dz.classList.remove("dragging"));
+      dz.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dz.classList.remove("dragging");
+      });
+
+      async function handleUpload() {
+        if (!selectedFiles.length) {
+          alert("Please select at least one PDF.");
+          return;
+        }
+        const county = document.getElementById("countyInput").value.trim();
+        const desc = document.getElementById("descInput").value.trim();
+        const btn = document.getElementById("uploadBtn");
+        btn.disabled = true;
+        btn.textContent = "Uploading...";
+
+        const prog = document.getElementById("uploadProgress");
+        prog.innerHTML = "";
+
+        for (const file of selectedFiles) {
+          const safeId = "f" + Math.random().toString(36).slice(2);
+          const item = document.createElement("div");
+          item.className = "prog-item";
+          item.innerHTML = `
+        <div class="prog-name">${esc(file.name)}</div>
+        <div class="prog-bar"><div class="prog-fill" id="fill-${safeId}"></div></div>
+        <div class="prog-label" id="label-${safeId}">Starting…</div>`;
+          prog.appendChild(item);
+
+          const fd = new FormData();
+          fd.append("file", file);
+          fd.append("county", county);
+          fd.append("description", desc);
+
+          try {
+            const res = await fetch("/upload", { method: "POST", body: fd });
+            if (!res.ok) throw new Error("Upload failed");
+            const { task_id } = await res.json();
+            pollProgress(task_id, safeId);
+          } catch (err) {
+            document.getElementById(`label-${safeId}`).textContent =
+              "Error: " + err.message;
+          }
+        }
+
+        btn.disabled = false;
+        btn.textContent = "Upload";
+        loadDocuments();
+      }
+
+      async function pollProgress(taskId, safeId) {
         while (true) {
-          res = await fetch(`/index_progress/${task_id}`);
-          const { percent, status } = await res.json();
-
-          console.log({ percent, status });
-
-          container.querySelector(".progress-fill").style.width = `${percent}%`;
-          container.querySelector(".status").textContent = `${percent}%`;
-
-          if (percent >= 100) break;
+          try {
+            const r = await fetch(`/index_progress/${taskId}`);
+            const { percent, status } = await r.json();
+            const fill = document.getElementById(`fill-${safeId}`);
+            const label = document.getElementById(`label-${safeId}`);
+            if (fill) fill.style.width = `${percent}%`;
+            if (label) label.textContent = `${percent}% — ${status}`;
+            if (percent >= 100) {
+              loadDocuments();
+              break;
+            }
+          } catch (_) {
+            break;
+          }
           await new Promise((r) => setTimeout(r, 1000));
         }
       }
 
-      function createProgressElement(filename) {
-        const div = document.createElement("div");
-        div.innerHTML = `
-              <div class="file-name">${filename}</div>
-              <div class="progress-bar">
-                <div class="progress-fill"><div class="status"></div></div>
-              </div>
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeModal();
+      });
 
-          `;
-
-        return div;
-      }
-
-      /*
-      CHATBOT SECTION
-      */
-
-      // state management variables
-      let waitingForState = false;
-      let currentState = null;
-
-      document
-        .getElementById("chatForm")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
-
-          userMessage = document.getElementById("userMessage").value;
-          if (!userMessage.trim()) return;
-
-          formData = new FormData();
-          formData.append("msg", userMessage);
-
-          //adding user message to chat
-          const chatBox = document.getElementById("chatBox");
-          addMessage(chatBox, "user-message", userMessage);
-
-          //clearing input
-          document.getElementById("userMessage").value = "";
-
-          //showing loading indicator
-          const loadingElement = addMessage(
-            chatBox,
-            "bot-message loading",
-            "loading response...",
-            "loading"
-          );
-
-          fetch("/get", {
-            method: "POST",
-            body: formData,
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              //remove loading indicator
-              document.getElementById("loading").remove();
-
-              if (data.success) {
-                if (data.needs_state) {
-                  // bot is asking for state
-                  waitingForState = true;
-                  updateInputPlaceholder("Enter the state name...");
-                  addMessage(chatBox, "bot-message", data.response);
-                } else if (data.combined_query) {
-                  //bot processed combined query
-                  waitingForState = false;
-                  updateInputPlaceholder("Type your question here...");
-                  addMessage(
-                    chatBox,
-                    "bot-message",
-                    `Understood. Processing: "${data.combined_query}"`
-                  );
-
-                  //starting poll for actual answer
-                  pollTaskId(data.task_id, chatBox);
-                } else if (data.used_previous_state) {
-                  // bot is using previously mentioned state
-                  addMessage(
-                    chatBox,
-                    "bot-message",
-                    `Answering your question regarding ${data.used_previous_state} ...`
-                  );
-                  pollTaskId(data.task_id, chatBox);
-                } else if (data.task_id) {
-                  //normal processing with state detected
-                  if (data.state_detected) {
-                    currentState = data.state_detected;
-                    addMessage(
-                      chatBox,
-                      "bot-message",
-                      `Answering your question regarding ${currentState} ...`
-                    );
-                  }
-                  pollTaskId(data.task_id, chatBox);
-                } else {
-                  //direct response (no task needed)
-                  addMessage(chatBox, "bot-message", data.response);
-                }
-              } else {
-                // handling error message
-                // chatBox.scrollTop = chatBox.scrollHeight;
-                addMessage(
-                  chatBox,
-                  "bot-message",
-                  "Sorry something went wrong. Please try again."
-                );
-                resetConversationState();
-              }
-            })
-            .catch((error) => {
-              document.getElementById("loading").remove();
-              addMessage(
-                chatBox,
-                "bot-message",
-                "Sorry, something went wrong. Please try again."
-              );
-              console.error("Error", error);
-              resetConversationState();
-            });
-        });
-
-      //function pollTaskId takes care of task results from celery
-      function pollTaskId(task_id, chatBox) {
-        const checkTask = setInterval(() => {
-          fetch(`/check_task/${task_id}`)
-            .then((response) => response.json())
-            .then((data) => {
-              if (data.status === "SUCCESS") {
-                clearInterval(checkTask);
-                if (document.getElementById("loading")) {
-                  document.getElementById("loading").remove();
-                }
-
-                //adding llm response
-                addMessage(chatBox, "bot-message", data.response);
-                resetConversationState();
-                // chatBox.scrollTop = chatBox.scrollHeight;
-              } else if (data.status === "FAILURE") {
-                clearInterval(checkTask);
-                if (document.getElementById("loading")) {
-                  document.getElementById("loading").remove();
-                }
-                addMessage(
-                  chatBox,
-                  "bot error",
-                  "Sorry, something went wrong. Please try again."
-                );
-                resetConversationState();
-              } else if (data.status !== "PENDING") {
-                clearInterval(checkTask);
-                if (document.getElementById("loading")) {
-                  document.getElementById("loading").remove();
-                }
-
-                // handling error message
-                addMessage(
-                  chatBox,
-                  "bot error",
-                  "Sorry, something went wrong. Please try again."
-                );
-                // chatBox.scrollTop = chatBox.scrollHeight;
-              }
-            })
-            .catch((error) => {
-              clearInterval(checkTask);
-
-              if (document.getElementById("loading")) {
-                document.getElementById("loading").remove();
-              }
-
-              // handling error message
-              addMessage(
-                chatBox,
-                "bot error",
-                "Sorry, something went wrong. Please try again."
-              );
-              // chatBox.scrollTop = chatBox.scrollHeight;
-              console.error(error);
-            });
-        }, 2000);
-      }
-
-      function addMessage(chatBox, className, message, id = null) {
-        const messageDiv = document.createElement("div");
-        messageDiv.className = className;
-        messageDiv.innerHTML = message;
-
-        if (id) {
-          messageDiv.id = id;
-        }
-
-        chatBox.appendChild(messageDiv);
-        chatBox.scrollTop = chatBox.scrollHeight;
-        return messageDiv;
-      }
-
-      function updateInputPlaceholder(text) {
-        document.getElementById("userMessage").placeholder = text;
-      }
-
-      function resetConversationState() {
-        waitingForState = false;
-        updateInputPlaceholder("Type your question here...");
-      }
+      loadDocuments();
     </script>
   </body>
 </html>
