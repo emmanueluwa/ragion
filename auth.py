@@ -56,14 +56,11 @@ def request_magic_link():
         return jsonify({"error": "Valid email required"}), 400
 
     user = User.query.filter_by(email=email).first()
-    if not user:
+    if not user or not user.is_approved:
         return (
-            jsonify({"error": "This email is not registered. Please request access"}),
+            jsonify({"error": "No account found. Please sign up to get access."}),
             403,
         )
-
-    if not user.is_approved:
-        return jsonify({"error": "Your account is pending approval."}), 403
 
     s = get_serializer()
     token = s.dumps(email, salt="magic-link")
@@ -103,27 +100,3 @@ def logout():
     logout_user()
 
     return redirect(url_for("auth.login"))
-
-
-@auth.route("/request-access", methods=["POST"])
-def request_access():
-    data = request.get_json()
-    email = data.get("email", "").strip().lower()
-
-    if not email or "@" not in email:
-        return jsonify({"error": "Valid email required"}), 400
-
-    existing = User.query.filter_by(email=email).first()
-    if existing:
-        return jsonify({"message": "Already registered"}), 200
-
-    user = User(email=email, is_approved=False)
-    db.session.add(user)
-    db.session.commit()
-
-    return (
-        jsonify(
-            {"message": "Access requested. You will receive an email when approved."}
-        ),
-        201,
-    )

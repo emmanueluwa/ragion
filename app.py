@@ -4,7 +4,7 @@ import boto3
 from botocore.client import Config
 from datetime import datetime, timezone
 
-from flask import Flask, render_template, jsonify, request, session
+from flask import Flask, render_template, jsonify, request, session, redirect, url_for
 from flask_login import current_user, login_required
 from tasks import llm_get_state, llm_call, process_file
 from werkzeug.utils import secure_filename
@@ -83,6 +83,13 @@ S3_BUCKET = os.environ.get("S3_BUCKET_NAME")
 
 
 @app.route("/")
+def home():
+    if current_user.is_authenticated:
+        return redirect(url_for("app"))
+    return render_template("landing.html")
+
+
+@app.route("/app")
 @login_required
 def index():
     return render_template("index.html")
@@ -273,6 +280,7 @@ def delete_docuemnt(doc_id):
 
 
 @app.route("/index_progress/<task_id>")
+@login_required
 def get_index_progress(task_id):
     """
     redis hash with task id key, celery updates hash as it runs
