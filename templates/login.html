@@ -1,17 +1,250 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>Login - SwiftCiv</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in — SwiftCiv</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <style>
+      html,
+      body {
+        overflow: auto;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg);
+        min-height: 100vh;
+      }
+
+      .login-wrap {
+        width: 100%;
+        max-width: 380px;
+        padding: 24px;
+      }
+
+      .login-logo {
+        width: 36px;
+        height: 36px;
+        background: var(--text);
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 28px;
+      }
+
+      .login-logo svg {
+        color: white;
+      }
+
+      .login-heading {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+
+      .login-sub {
+        font-size: 13px;
+        color: var(--text-2);
+        margin-bottom: 28px;
+        line-height: 1.5;
+      }
+
+      .login-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+
+      .login-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-3);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
+      }
+
+      .login-input {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 11px 13px;
+        color: var(--text);
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        outline: none;
+        transition:
+          border-color 0.12s,
+          box-shadow 0.12s;
+        margin-bottom: 14px;
+      }
+
+      .login-input:focus {
+        border-color: var(--border-mid);
+        background: var(--white);
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
+      }
+
+      .login-input::placeholder {
+        color: var(--text-3);
+      }
+
+      .login-btn {
+        width: 100%;
+        background: var(--text);
+        border: none;
+        border-radius: 9px;
+        padding: 11px;
+        color: white;
+        font-family: "Inter", sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: opacity 0.12s;
+      }
+
+      .login-btn:hover {
+        opacity: 0.82;
+      }
+
+      .flash-msg {
+        margin-top: 14px;
+        padding: 10px 13px;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .flash-msg.error {
+        background: #fdf0ef;
+        color: #c0392b;
+        border: 1px solid rgba(192, 57, 43, 0.15);
+      }
+
+      .flash-msg.success {
+        background: #f0faf4;
+        color: #1a7a3f;
+        border: 1px solid rgba(26, 122, 63, 0.15);
+      }
+
+      .flash-msg.message,
+      .flash-msg.info {
+        background: var(--bg-2);
+        color: var(--text-2);
+        border: 1px solid var(--border);
+      }
+
+      .login-footer {
+        margin-top: 20px;
+        font-size: 12px;
+        color: var(--text-3);
+        text-align: center;
+        line-height: 1.7;
+      }
+    </style>
   </head>
   <body>
-    <h2>Sign in</h2>
-    <form method="POST" action="/login">
-      <input type="email" name="email" placeholder="your@email.com" required />
-      <button type="submit">Send magic link</button>
-    </form>
-    {% with messages = get_flashed_messages(with_categories=true) %} {% for
-    category, message in messages %}
-    <p>{{ message }}</p>
-    {% endfor %} {% endwith %}
+    <div class="login-wrap">
+      <div class="login-logo">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+        </svg>
+      </div>
+
+      <div class="login-heading">Sign in to SwiftCiv</div>
+      <div class="login-sub">
+        Enter your email and we'll send you a magic link to sign in.
+      </div>
+
+      <div class="login-card">
+        <form method="POST" action="/login">
+          <label class="login-label" for="email">Email address</label>
+          <input
+            class="login-input"
+            type="email"
+            id="email"
+            name="email"
+            placeholder="you@example.com"
+            required
+            autofocus
+          />
+          <button class="login-btn" type="submit">Send magic link</button>
+        </form>
+
+        {% if error %}
+        <div class="flash-msg error" id="formMsg">{{ error }}</div>
+        {% else %}
+        <div class="flash-msg" id="formMsg" style="display: none"></div>
+        {% endif %}
+      </div>
+
+      <div class="login-footer">
+        Access is by invitation only.<br />
+        Contact us if you'd like to request access.
+      </div>
+    </div>
+    <script>
+      document
+        .querySelector("form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const email = document.getElementById("email").value;
+          const btn = document.querySelector(".login-btn");
+          const msg = document.getElementById("formMsg");
+
+          btn.textContent = "Sending...";
+          btn.disabled = true;
+
+          try {
+            const res = await fetch("/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: "email=" + encodeURIComponent(email),
+            });
+            const data = await res.json();
+
+            msg.style.display = "block";
+            if (res.ok) {
+              msg.className = "flash-msg success";
+              msg.textContent =
+                data.message || "Magic link sent — check your email.";
+              btn.textContent = "Link sent";
+            } else {
+              msg.className = "flash-msg error";
+              msg.textContent = data.error || "Something went wrong.";
+              btn.textContent = "Send magic link";
+              btn.disabled = false;
+            }
+          } catch (err) {
+            msg.style.display = "block";
+            msg.className = "flash-msg error";
+            msg.textContent = "Something went wrong. Please try again.";
+            btn.textContent = "Send magic link";
+            btn.disabled = false;
+          }
+        });
+    </script>
   </body>
 </html>
