@@ -358,21 +358,22 @@
       }
 
       function fmt(text) {
+        text = text.replace(
+          /\*{0,2}Citation:\*{0,2}\s*([\s\S]*?)(?=\n\n|\n[A-Z]|$)/gi,
+          (match, cite) => `
+      <div class="cite-block">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        ${cite.trim().replace(/\n/g, " · ")}
+      </div>`,
+        );
+
         return text
           .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
           .replace(/\*(.*?)\*/g, "<em>$1</em>")
           .replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>")
-          .replace(
-            /(?:\*?Citation:\*?\s*|^\()([\s\S]*?)(?:\)$|\n\n|$)/gim,
-            (match, cite) => `
-        <div class="cite-block">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px">
-            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-          </svg>
-          ${cite.trim().replace(/\n/g, " · ")}
-        </div>`,
-          )
           .replace(/\n/g, "<br>");
       }
 
