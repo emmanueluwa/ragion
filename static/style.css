@@ -415,15 +415,15 @@ body {
 }
 
 .cite-block {
-  display: inline-flex;
+  display: flex;
   align-items: flex-start;
   gap: 6px;
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background: var(--white);
+  border: 1px solid var(--border-mid);
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 8px 12px;
   font-size: 12px;
-  color: var(--text-3);
+  color: var(--text-2);
   margin-top: 10px;
   line-height: 1.5;
   max-width: 100%;
