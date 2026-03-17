@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>You're in — SwiftCiv</title>
+    <title>Payment confirmed — SwiftCiv</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
@@ -26,7 +26,14 @@
     </style>
   </head>
   <body>
-    <div style="text-align: center; max-width: 420px; padding: 40px 24px">
+    <div
+      style="
+        text-align: center;
+        max-width: 400px;
+        padding: 40px 24px;
+        font-family: &quot;Inter&quot;, sans-serif;
+      "
+    >
       <div
         style="
           width: 52px;
@@ -36,7 +43,7 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          margin: 0 auto 24px;
+          margin: 0 auto 28px;
         "
       >
         <svg
@@ -50,44 +57,56 @@
           <polyline points="20 6 9 17 4 12" />
         </svg>
       </div>
+
       <h1
         style="
           font-size: 22px;
           font-weight: 600;
           color: #111;
-          margin-bottom: 10px;
-          font-family: &quot;Inter&quot;, sans-serif;
+          margin-bottom: 12px;
         "
       >
-        You're in.
+        Payment confirmed.
       </h1>
+
       <p
         style="
-          color: #666;
+          color: #555;
           font-size: 15px;
-          line-height: 1.6;
+          line-height: 1.75;
           margin-bottom: 28px;
-          font-family: &quot;Inter&quot;, sans-serif;
         "
       >
-        Payment confirmed. Check your email for your magic link to access
-        SwiftCiv.
+        We've sent a magic link to your email.<br />
+        Click it to access SwiftCiv instantly —<br />no password needed.
       </p>
-      <a
-        href="/login"
+
+      <div
         style="
-          display: inline-block;
-          background: #111;
-          color: white;
-          text-decoration: none;
-          padding: 11px 24px;
-          border-radius: 9px;
-          font-size: 14px;
-          font-weight: 500;
-          font-family: &quot;Inter&quot;, sans-serif;
+          background: #f3f2ef;
+          border-radius: 10px;
+          padding: 16px 20px;
+          margin-bottom: 24px;
         "
-        >Go to login</a
       >
+        <p style="color: #888; font-size: 13px; line-height: 1.65; margin: 0">
+          Can't find it? Check your spam folder.<br />
+          The link expires in 15 minutes.
+        </p>
+      </div>
+
+      <p style="color: #aaa; font-size: 12px">
+        Already have an account?
+        <a
+          href="/login"
+          style="
+            color: #555;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+          "
+          >Sign in</a
+        >
+      </p>
     </div>
   </body>
 </html>
