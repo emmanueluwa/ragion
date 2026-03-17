@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>You're in — SwiftCiv</title>
+    <meta http-equiv="refresh" content="6;url=/login" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <style>
+      html,
+      body {
+        overflow: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background: var(--bg);
+      }
+    </style>
+  </head>
+  <body>
+    <div style="text-align: center; max-width: 420px; padding: 40px 24px">
+      <div
+        style="
+          width: 52px;
+          height: 52px;
+          background: #111;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 24px;
+        "
+      >
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          stroke-width="2.5"
+        >
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </div>
+      <h1
+        style="
+          font-size: 22px;
+          font-weight: 600;
+          color: #111;
+          margin-bottom: 10px;
+          font-family: &quot;Inter&quot;, sans-serif;
+        "
+      >
+        You're in.
+      </h1>
+      <p
+        style="
+          color: #666;
+          font-size: 15px;
+          line-height: 1.6;
+          margin-bottom: 28px;
+          font-family: &quot;Inter&quot;, sans-serif;
+        "
+      >
+        Check your email — we've sent you a magic link to access SwiftCiv.<br /><br />
+        You'll be redirected to the login page shortly.
+      </p>
+      <a
+        href="/login"
+        style="
+          display: inline-block;
+          background: #111;
+          color: white;
+          text-decoration: none;
+          padding: 11px 24px;
+          border-radius: 9px;
+          font-size: 14px;
+          font-weight: 500;
+          font-family: &quot;Inter&quot;, sans-serif;
+        "
+        >Go to login</a
+      >
+    </div>
+  </body>
+</html>
