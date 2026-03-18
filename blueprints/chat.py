@@ -2,8 +2,15 @@ from flask import Blueprint, jsonify, request, session
 from flask_login import login_required, current_user
 from tasks import llm_get_state, llm_call
 from celery_config import celery_app
+from models import Document
 
 chat = Blueprint("chat", __name__)
+
+
+def user_has_multiple_documents():
+    count = Document.query.filter_by(user_id=current_user.id, status="indexed").count()
+
+    return count > 1
 
 
 @chat.route("/get", methods=["GET", "POST"])
@@ -46,7 +53,20 @@ def get():
             if state_result.strip().lower() == "none":
                 last_state = session.get("last_state")
 
-                if last_state:
+                # multiple docs and no county mentioned
+                if user_has_multiple_documents():
+                    session["waiting_for_state"] = True
+                    session["original_question"] = user_input
+
+                    return jsonify(
+                        {
+                            "success": True,
+                            "response": "You have multiple documents. Which jurisdiction or county does this question relate to?",
+                            "needs_state": True,
+                        }
+                    )
+
+                elif last_state:
                     combined_query = f"{user_input} for {last_state}"
 
                     task = llm_call.delay(combined_query, last_state, user_id)
@@ -67,14 +87,14 @@ def get():
                     return jsonify(
                         {
                             "success": True,
-                            "response": "For which county or local authority would you like to know this information?",
+                            "response": "Which jurisdiction or county does this question relate to?",
                             "needs_state": True,
                         }
                     )
 
             else:
                 # saving found state for future and continuing to llm query
-                session["last_state"] = state_result.strip()
+                session["last_state"] = state_result.strip().lower()
 
                 task = llm_call.delay(user_input, state_result, user_id)
 

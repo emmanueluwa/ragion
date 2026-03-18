@@ -105,20 +105,20 @@ def llm_get_state(msg):
 
     try:
         initial_prompt = f"""
-        Analyze this question: "{msg}"
-
-        Your task: Identify if a specific county or state is explicitly mentioned in the question.
-
-        Rules:
-        - Only return a county or state if it is directly, clearly mentioned in the text (e.g., "Manatee County", "Florida", "Orange County").
-        - Do NOT infer or guess based on context, document references, or implied meaning.
-        - If there is no explicit mention of a county or state, return exactly: None
-
-        Return format:
-        - If a county is mentioned: County, State (e.g., "Manatee County, Florida")
-        - If only a state is mentioned: State (e.g., "Florida")
-        - If nothing is mentioned: None
-        """
+Analyze this question: "{msg}"
+ 
+Your task: Identify if a specific county, jurisdiction or local authority is explicitly mentioned.
+ 
+Rules:
+- Only return a jurisdiction if it is directly and clearly mentioned.
+- Do NOT infer or guess.
+- If nothing is mentioned return exactly: None
+ 
+Return format:
+- Return ONLY the jurisdiction name in lowercase with no extra words.
+- Examples: "manatee", "surrey"
+- If nothing is mentioned: None
+"""
 
         response = chat_session.send_message(initial_prompt)
 
@@ -167,9 +167,20 @@ def process_file(self, s3_key, file_id, county, description, user_id):
             s3.download_fileobj(S3_BUCKET, s3_key, tmp)
             tmp_path = tmp.name
 
-        index_document(
+        detected_jurisdiction = index_document(
             tmp_path, county, description, user_id, progress_callback=progress_callback
         )
+
+        # update document county in db with detected jurisdiction
+        if detected_jurisdiction:
+            from models import Document, db
+            from app import app
+
+            with app.app_context():
+                doc = Document.query.get(file_id)
+                if doc:
+                    doc.county = detected_jurisdiction
+                    db.session.commit()
 
         progress_callback(100, "Indexing complete")
 
