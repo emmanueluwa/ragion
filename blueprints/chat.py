@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, session
-from flask_login import login_required
+from flask_login import login_required, current_user
 from tasks import llm_get_state, llm_call
 from celery_config import celery_app
 
@@ -12,13 +12,14 @@ def get():
     try:
 
         msg = request.form["msg"]
-        input = msg.strip()
+        user_input = msg.strip()
+        user_id = current_user.id
 
         # checking to see if we are waiting for a State from the user
         if "waiting_for_state" in session and session["waiting_for_state"]:
             # state provided for previous question from user
             original_question = session.get("original_question", "")
-            state_provided = input
+            state_provided = user_input
 
             combined_query = f"{original_question} for {state_provided}"
 
@@ -27,7 +28,7 @@ def get():
             session.pop("waiting_for_state", None)
             session.pop("original_question", None)
 
-            task = llm_call.delay(combined_query, state_provided)
+            task = llm_call.delay(combined_query, state_provided, user_id)
 
             return jsonify(
                 {
@@ -39,16 +40,16 @@ def get():
 
         else:
             # checking if state is mentioned in new question
-            state_task = llm_get_state.delay(input)
+            state_task = llm_get_state.delay(user_input)
             state_result = state_task.get(timeout=30)
 
             if state_result.strip().lower() == "none":
                 last_state = session.get("last_state")
 
                 if last_state:
-                    combined_query = f"{input} for {last_state}"
+                    combined_query = f"{user_input} for {last_state}"
 
-                    task = llm_call.delay(combined_query, last_state)
+                    task = llm_call.delay(combined_query, last_state, user_id)
 
                     return jsonify(
                         {
@@ -61,12 +62,12 @@ def get():
                 else:
                     # no state mentioned and no previous state
                     session["waiting_for_state"] = True
-                    session["original_question"] = input
+                    session["original_question"] = user_input
 
                     return jsonify(
                         {
                             "success": True,
-                            "response": "For which county would you like to know this information?",
+                            "response": "For which county or local authority would you like to know this information?",
                             "needs_state": True,
                         }
                     )
@@ -75,7 +76,7 @@ def get():
                 # saving found state for future and continuing to llm query
                 session["last_state"] = state_result.strip()
 
-                task = llm_call.delay(input, state_result)
+                task = llm_call.delay(user_input, state_result, user_id)
 
                 return jsonify(
                     {

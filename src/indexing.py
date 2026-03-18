@@ -1,16 +1,15 @@
 """
-this file should be ran once to create index for query operation
+this file should be run once to create index for query operation
 
 execute once unless data source is updated
 """
 
-from src.helper import load_pdf_file, text_split, download_hugging_face_embeddings
+from src.helper import load_pdf_file, download_hugging_face_embeddings
 from pinecone.grpc import PineconeGRPC as Pinecone
 from pinecone import ServerlessSpec
 from pinecone.exceptions import PineconeApiException
 from langchain_pinecone import PineconeVectorStore
 from langchain_classic.text_splitter import RecursiveCharacterTextSplitter
-from dotenv import load_dotenv
 import os
 import time
 
@@ -20,9 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PINECONE_API_KEY = os.environ.get("PINECONE_API_KEY")
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
@@ -32,9 +29,12 @@ def index_document(
     file_path,
     county,
     description,
+    user_id,
     index_name="ragion",
     progress_callback=None,
 ):
+    namespace = f"user_{user_id}"
+
     if progress_callback:
         progress_callback(10, "Loading PDF")
 
@@ -55,7 +55,7 @@ def index_document(
         progress_callback(50, "Adding metadata")
 
     for chunk in text_chunks:
-        # prepend county to improve sementic search
+        # prepend county to improve semantic search
         chunk.page_content = f"Jurisdiction: {county}. Page: {chunk.metadata.get('page_label', 'unknown')}. {chunk.page_content}"
 
         chunk.metadata.update(
@@ -64,6 +64,7 @@ def index_document(
                 "document": description,
                 "page": chunk.metadata.get("page", "unknown"),
                 "source": os.path.basename(file_path),
+                "user_id": user_id,
             }
         )
 
@@ -91,9 +92,13 @@ def index_document(
         progress_callback(90, "Upserting to pinecone")
     # embedding each chunk and upsert the embeddings into pinecone index
     PineconeVectorStore.from_documents(
-        documents=text_chunks, index_name=index_name, embedding=embeddings
+        documents=text_chunks,
+        index_name=index_name,
+        embedding=embeddings,
+        namespace=namespace,
     )
 
     if progress_callback:
         progress_callback(100, "Indexing complete")
+
     return True

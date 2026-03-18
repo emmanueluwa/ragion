@@ -38,6 +38,7 @@ class Document(db.Model):
     s3_key = db.Column(db.String(500), nullable=False)
     county = db.Column(db.String(255), nullable=True)
     description = db.Column(db.Text, nullable=True)
+    content_hash = db.Column(db.String(32), nullable=True)
     status = db.Column(db.String(50), default="processing", nullable=False)
     uploaded_at = db.Column(
         db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False

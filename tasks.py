@@ -20,7 +20,6 @@ import logging
 import tempfile
 
 load_dotenv()
-indexing_progress = {}
 
 # debugging
 logger = get_task_logger(__name__)
@@ -65,15 +64,15 @@ s3 = boto3.client(
 )
 
 
-def get_rag_chain(county):
+def get_rag_chain(user_id):
     embeddings = download_hugging_face_embeddings()
+    namespace = f"user_{user_id}"
 
     index_name = "ragion"
 
     # loading existing index
     docsearch = PineconeVectorStore.from_existing_index(
-        index_name=index_name,
-        embedding=embeddings,
+        index_name=index_name, embedding=embeddings, namespace=namespace
     )
 
     # By default, similarity search ignores metadata unless you explicitly filter or boost based on it.
@@ -131,7 +130,7 @@ def llm_get_state(msg):
 
 
 @celery_app.task(name="tasks.llm_call")
-def llm_call(msg, county):
+def llm_call(msg, county, user_id):
     """
     Main RAG chain call for answering user questions
     """
@@ -153,7 +152,7 @@ def llm_call(msg, county):
 
 
 @celery_app.task(bind=True)
-def process_file(self, s3_key, file_id, county, description):
+def process_file(self, s3_key, file_id, county, description, user_id):
     def progress_callback(percent, status):
         r.hset(self.request.id, mapping={"percent": percent, "status": status})
         r.expire(self.request.id, 3600)  # 1hr
@@ -169,7 +168,7 @@ def process_file(self, s3_key, file_id, county, description):
             tmp_path = tmp.name
 
         index_document(
-            tmp_path, county, description, progress_callback=progress_callback
+            tmp_path, county, description, user_id, progress_callback=progress_callback
         )
 
         progress_callback(100, "Indexing complete")

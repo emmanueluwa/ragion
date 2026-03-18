@@ -1,5 +1,6 @@
 import os
 import uuid
+import hashlib
 import boto3
 from botocore.client import Config
 from datetime import datetime, timezone
@@ -15,6 +16,18 @@ import redis
 
 documents = Blueprint("documents", __name__)
 
+
+# s3 client pointing to hetzner object storage
+s3 = boto3.client(
+    "s3",
+    endpoint_url=os.environ.get("S3_ENDPOINT_URL"),
+    aws_access_key_id=os.environ.get("S3_ACCESS_KEY"),
+    aws_secret_access_key=os.environ.get("S3_SECRET_KEY"),
+    config=Config(signature_version="s3v4"),
+)
+
+S3_BUCKET = os.environ.get("S3_BUCKET_NAME")
+
 # redis connection for progress tracking
 redis_endpoint = os.environ.get("REDIS_ENDPOINT", "172.18.0.1")
 redis_port = os.environ.get("REDIS_PORT", "6379")
@@ -27,16 +40,17 @@ else:
 
 r = redis.Redis.from_url(redis_url, decode_responses=True)
 
-# s3 client pointing to hetzner object storage
-s3 = boto3.client(
-    "s3",
-    endpoint_url=os.environ.get("S3_ENDPOINT_URL"),
-    aws_access_key_id=os.environ.get("S3_ACCESS_KEY"),
-    aws_secret_access_key=os.environ.get("S3_SECRET_KEY"),
-    config=Config(signature_version="s3v4"),
-)
 
-S3_BUCKET = os.environ.get("S3_BUCKET_NAME")
+def hash_file(file):
+    md5 = hashlib.md5()
+    # reading file in 4kb chunks till end
+    for chunk in iter(lambda: file.read(4096), b""):
+        md5.update(chunk)
+
+    # reset file pointer to start
+    file.seek(0)
+
+    return md5.hexdigest()
 
 
 @documents.route("/upload", methods=["POST"])
@@ -52,9 +66,26 @@ def upload():
     if file.filename == "":
         return jsonify({"error": "No file selected"}), 400
 
+    content_hash = hash_file(file)
+
+    existing = Document.query.filter_by(
+        user_id=current_user.id, content_hash=content_hash
+    ).first()
+
+    if existing:
+        return (
+            jsonify(
+                {
+                    "error": f"This document is already in your knowledge base as '{existing.filename}'. Delete it first if you want to re-upload."
+                }
+            ),
+            400,
+        )
+
     file_id = str(uuid.uuid4())
     filename = secure_filename(file.filename)
     s3_key = f"{current_user.id}/{file_id}_{filename}"
+    namespace = f"user_{current_user.id}"
 
     # upload to object storage
     s3.upload_fileobj(
@@ -69,13 +100,15 @@ def upload():
         s3_key=s3_key,
         county=county,
         description=description,
+        content_hash=content_hash,
+        pinecone_namespace=namespace,
         status="processing",
     )
     db.session.add(doc)
     db.session.commit()
 
     # start indexing task
-    task = process_file.delay(s3_key, file_id, county, description)
+    task = process_file.delay(s3_key, file_id, county, description, current_user.id)
 
     return jsonify({"task_id": task.id, "file_id": file_id})
 
