@@ -134,7 +134,7 @@ def llm_call(msg, county, user_id):
     """
     Main RAG chain call for answering user questions
     """
-    rag_chain = get_rag_chain(county)
+    rag_chain = get_rag_chain(user_id)
     try:
         if county and county.strip().lower() != "none":
             query = f"{msg} in {county}"
