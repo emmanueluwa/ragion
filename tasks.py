@@ -173,14 +173,23 @@ def process_file(self, s3_key, file_id, county, description, user_id):
 
         # update document county in db with detected jurisdiction
         if detected_jurisdiction:
-            from models import Document, db
-            from app import app
+            import psycopg2
 
-            with app.app_context():
-                doc = Document.query.get(file_id)
-                if doc:
-                    doc.county = detected_jurisdiction
-                    db.session.commit()
+            try:
+                conn = psycopg2.connect(os.environ.get("DATABASE_URL"))
+
+                cur = conn.cursor()
+                cur.execute(
+                    "UPDATE documents SET county = %s WHERE id = %s",
+                    (detected_jurisdiction, file_id),
+                )
+
+                conn.commit()
+                cur.close()
+                conn.close()
+
+            except Exception as e:
+                print(f"Failed to update county in DB: {e}")
 
         progress_callback(100, "Indexing complete")
 
