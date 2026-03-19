@@ -1,3 +1,9 @@
+import psycopg2
+import redis
+import os
+import logging
+import tempfile
+
 from celery_config import celery_app
 from celery.utils.log import get_task_logger
 from src.helper import download_hugging_face_embeddings
@@ -8,16 +14,12 @@ from langchain_classic.chains.combine_documents import create_stuff_documents_ch
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 import google.generativeai as genai
-import redis
 import boto3
 from botocore.client import Config
 
 from src.prompt import *
 from src.indexing import index_document
 
-import os
-import logging
-import tempfile
 
 load_dotenv()
 
@@ -173,14 +175,13 @@ def process_file(self, s3_key, file_id, county, description, user_id):
 
         # update document county in db with detected jurisdiction
         if detected_jurisdiction:
-            import psycopg2
 
             try:
                 conn = psycopg2.connect(os.environ.get("DATABASE_URL"))
 
                 cur = conn.cursor()
                 cur.execute(
-                    "UPDATE documents SET county = %s WHERE id = %s",
+                    "UPDATE documents SET county = %s, status = %s, indexed_at = NOW() WHERE id = %s",
                     (detected_jurisdiction, file_id),
                 )
 
