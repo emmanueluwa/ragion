@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 import os
 from dotenv import load_dotenv
 
@@ -26,6 +27,12 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="UTC",
     enable_utc=True,
+    beat_schedule={
+        "cleanup-stuck-deletions": {
+            "task": "task.cleanup_stuck_deletions",
+            "schedule": crontab(minute="*/30"),
+        }
+    },
 )
 
 import tasks
