@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
+from pinecone import Pinecone
 
 from models import Document, db
 from tasks import process_file
@@ -133,6 +134,18 @@ def delete_document(doc_id):
         return jsonify({"error": "Document not found"}), 404
 
     s3.delete_object(Bucket=S3_BUCKET, Key=doc.s3_key)
+
+    # delete vectors from pinecone
+    try:
+        pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+        index = pc.Index("ragion")
+        namespace = f"user_{current_user.id}"
+
+        index.delete(filter={"source": doc.filename}, namespace=namespace)
+
+    except Exception as e:
+        print(f"failed to delete pinecone vectors: {e}")
+
     db.session.delete(doc)
     db.session.commit()
 

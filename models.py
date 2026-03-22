@@ -46,6 +46,10 @@ class Document(db.Model):
     indexed_at = db.Column(db.DateTime, nullable=True)
     pinecone_namespace = db.Column(db.String(255), nullable=True)
 
+    vectors = db.relationship(
+        "DocumentVector", backref="document", lazy=True, cascade="all, delete-orphan"
+    )
+
     def to_dict(self):
         return {
             "id": self.id,
@@ -58,3 +62,16 @@ class Document(db.Model):
 
     def __repr__(self):
         return f"<Document {self.filename}>"
+
+
+class DocumentVector(db.Model):
+    __tablename__ = "document_vectors"
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    document_id = db.Column(
+        db.String(36), db.ForeignKey("documents.id"), nullable=False, index=True
+    )
+    vector_id = db.Column(db.String(255), nullable=False)
+
+    def __repr__(self):
+        return f"<DocumentVector {self.vector_id}>"
