@@ -29,7 +29,7 @@ celery_app.conf.update(
     enable_utc=True,
     beat_schedule={
         "cleanup-stuck-deletions": {
-            "task": "task.cleanup_stuck_deletions",
+            "task": "tasks.cleanup_stuck_deletions",
             "schedule": crontab(minute="*/30"),
         }
     },
