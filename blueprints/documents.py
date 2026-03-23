@@ -8,10 +8,9 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
-from pinecone import Pinecone
 
 from models import Document, db
-from tasks import process_file
+from tasks import delete_document_task, process_file
 
 import redis
 
@@ -58,7 +57,7 @@ def hash_file(file):
 @login_required
 def upload():
     if "file" not in request.files:
-        return jsonify({"error": "no files added"}), 400
+        return jsonify({"error": "No file provided"}), 400
 
     file = request.files["file"]
     county = request.form.get("county", "")
@@ -133,23 +132,19 @@ def delete_document(doc_id):
     if not doc:
         return jsonify({"error": "Document not found"}), 404
 
-    s3.delete_object(Bucket=S3_BUCKET, Key=doc.s3_key)
+    if doc.status in ("deleting", "delete_failed"):
+        return jsonify({"error": "Document is already being deleted"}), 400
 
-    # delete vectors from pinecone
-    try:
-        pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
-        index = pc.Index("ragion")
-        namespace = f"user_{current_user.id}"
-
-        index.delete(filter={"source": doc.filename}, namespace=namespace)
-
-    except Exception as e:
-        print(f"failed to delete pinecone vectors: {e}")
-
-    db.session.delete(doc)
+    # mark as deleting  so ui updates
+    doc.status = "deleting"
     db.session.commit()
 
-    return jsonify({"message": "Document deleted"}), 200
+    # queue async delition task
+    delete_document_task.delay(
+        doc.id, doc.s3_key, doc.pinecone_namespace, current_user.email
+    )
+
+    return jsonify({"message": "Document deletion started"}), 200
 
 
 @documents.route("/index_progress/<task_id>")
