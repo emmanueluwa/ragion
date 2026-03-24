@@ -277,9 +277,13 @@ def delete_document_task(self, document_id, s3_key, namespace, user_email):
             try:
                 cur = conn.cursor()
                 cur.execute(
-                    "DELETE FROM document_vectors WHERE document_id = %s", (document_id)
+                    "DELETE FROM document_vectors WHERE document_id = %(doc_id)s",
+                    {"doc_id": document_id},
                 )
-                cur.execute("DELETE FROM documents WHERE id = %s", (document_id))
+                cur.execute(
+                    "DELETE FROM documents WHERE id = %(doc_id)s",
+                    {"doc_id": document_id},
+                )
 
                 conn.commit()
             finally:

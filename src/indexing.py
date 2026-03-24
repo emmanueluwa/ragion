@@ -161,7 +161,7 @@ def index_document(
             {
                 "id": vector_id,
                 "values": vector,
-                "metadata": chunk.metadata,
+                "metadata": {**chunk.metadata, "text": chunk.page_content},
             }
         )
 
