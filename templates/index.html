@@ -459,7 +459,9 @@
               <div class="doc-name" title="${esc(d.filename)}">${esc(d.filename)}</div>
               <div class="doc-meta">${esc(d.county || "—")}</div>
             </div>
-            <span class="doc-pill ${d.status}">${d.status}</span>
+            <span class="doc-pill ${d.status}">
+              ${d.status === "delete_failed" ? "failed" : d.status}
+            </span>
             <button class="doc-delete" onclick="deleteDoc('${d.id}')" title="Remove">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -473,9 +475,34 @@
 
       function deleteDoc(id) {
         if (!confirm("Remove this document from the knowledge base?")) return;
-        fetch(`/documents/${id}`, { method: "DELETE" }).then(() =>
-          loadDocuments(),
-        );
+
+        fetch(`/documents/${id}`, { method: "DELETE" })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.error) {
+              alert(data.error);
+              return;
+            }
+            // poll until document disappears from DB
+            const poll = setInterval(() => {
+              fetch("/documents")
+                .then((r) => r.json())
+                .then((docs) => {
+                  const still_exists = docs.find((d) => d.id === id);
+                  if (!still_exists) {
+                    clearInterval(poll);
+                    loadDocuments();
+                  } else if (still_exists.status === "delete_failed") {
+                    clearInterval(poll);
+                    loadDocuments();
+                    alert("Deletion failed. Our team has been notified.");
+                  } else {
+                    loadDocuments();
+                  }
+                });
+            }, 2000);
+          })
+          .catch(() => alert("Something went wrong. Please try again."));
       }
 
       /* ── MODAL ── */

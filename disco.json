@@ -7,6 +7,9 @@
     },
     "worker": {
       "command": "celery -A tasks worker --loglevel=info --concurrency 2"
+    },
+    "beat": {
+      "command": "celery -A tasks beat --loglevel=info"
     }
   }
 }
