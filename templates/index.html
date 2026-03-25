@@ -284,14 +284,6 @@
           .replace(/>/g, "&gt;");
       }
 
-      function fmt(text) {
-        return text
-          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-          .replace(/\*(.*?)\*/g, "<em>$1</em>")
-          .replace(/^> (.+)$/gm, "<blockquote>$1</blockquote>")
-          .replace(/\n/g, "<br>");
-      }
-
       function scrollDown() {
         const box = document.getElementById("chatMessages");
         box.scrollTop = box.scrollHeight;
@@ -441,7 +433,7 @@
 
       /* ── DOCUMENTS ── */
       function loadDocuments() {
-        fetch("/documents")
+        return fetch("/documents")
           .then((r) => r.json())
           .then((docs) => {
             const list = document.getElementById("docList");
@@ -507,11 +499,14 @@
 
       /* ── MODAL ── */
       let selectedFiles = [];
+      let modalManuallyClosed = false;
 
       function openModal() {
+        modalManuallyClosed = false;
         document.getElementById("overlay").classList.add("open");
       }
       function closeModal() {
+        modalManuallyClosed = true;
         document.getElementById("overlay").classList.remove("open");
         document.getElementById("fileChips").innerHTML = "";
         document.getElementById("fileInput").value = "";
@@ -586,22 +581,33 @@
           fd.append("description", desc);
 
           try {
+            btn.textContent = "Uploading...";
             const res = await fetch("/upload", { method: "POST", body: fd });
             if (!res.ok) {
               const data = await res.json();
               throw new Error(data.error || "Upload failed");
             }
             const { task_id } = await res.json();
-            pollProgress(task_id, safeId);
+            btn.textContent = "Processing...";
+            await pollProgress(task_id, safeId);
           } catch (err) {
             document.getElementById(`label-${safeId}`).textContent =
               "Error: " + err.message;
+            btn.disabled = false;
+            btn.textContent = "Upload";
+
+            return;
           }
+        }
+        await loadDocuments();
+        if (!modalManuallyClosed) {
+          await new Promise((r) => setTimeout(r, 800));
+
+          closeModal();
         }
 
         btn.disabled = false;
         btn.textContent = "Upload";
-        loadDocuments();
       }
 
       async function pollProgress(taskId, safeId) {
@@ -614,7 +620,6 @@
             if (fill) fill.style.width = `${percent}%`;
             if (label) label.textContent = `${percent}% — ${status}`;
             if (percent >= 100) {
-              loadDocuments();
               break;
             }
           } catch (_) {
