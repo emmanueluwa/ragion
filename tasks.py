@@ -207,7 +207,11 @@ def process_file(self, s3_key, file_id, county, description, user_id):
                 SET county = %s, status = %s, indexed_at = NOW()
                 WHERE id = %s                
                 """,
-                (jurisdiction or county, "indexed", file_id),
+                (
+                    jurisdiction or county,
+                    "indexed",
+                    file_id,
+                ),
             )
 
             for vector_id in vector_ids:
@@ -251,7 +255,7 @@ def delete_document_task(self, document_id, s3_key, namespace, user_email):
         cur = conn.cursor()
         cur.execute(
             "SELECT vector_id FROM document_vectors WHERE document_id = %s",
-            (document_id),
+            (document_id,),
         )
 
         vector_ids = [row[0] for row in cur.fetchall()]
@@ -315,7 +319,10 @@ def delete_document_task(self, document_id, s3_key, namespace, user_email):
                 cur = conn.cursor()
                 cur.execute(
                     "UPDATE documents SET status = %s WHERE id = %s",
-                    ("delete_failed", document_id),
+                    (
+                        "delete_failed",
+                        document_id,
+                    ),
                 )
                 conn.commit()
                 cur.close()
