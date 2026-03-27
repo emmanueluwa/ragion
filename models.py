@@ -24,6 +24,9 @@ class User(UserMixin, db.Model):
     documents = db.relationship(
         "Document", backref="owner", lazy=True, cascade="all, delete-orphan"
     )
+    messages = db.relationship(
+        "Message", backref="user", lazy=True, cascade="all, delete-orphan"
+    )
 
     def __repr__(self):
         return f"<User {self.email}>"
@@ -75,3 +78,31 @@ class DocumentVector(db.Model):
 
     def __repr__(self):
         return f"<DocumentVector {self.vector_id}>"
+
+
+class Message(db.Model):
+    __tablename__ = "messages"
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    user_id = db.Column(
+        db.String(36), db.ForeignKey("users.id"), nullable=False, index=True
+    )
+    role = db.Column(db.String(10), nullable=False)  # user or assistant
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+        index=True,
+    )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "role": self.role,
+            "content": self.content,
+            "created_at": self.created_at.isoformat(),
+        }
+
+    def __repr__(self):
+        return f"<Message {self.role} {self.id}>"

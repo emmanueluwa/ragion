@@ -2,15 +2,75 @@ from flask import Blueprint, jsonify, request, session
 from flask_login import login_required, current_user
 from tasks import llm_get_state, llm_call
 from celery_config import celery_app
-from models import Document
+from models import Document, Message, db
+from datetime import datetime, timezone
 
 chat = Blueprint("chat", __name__)
+
+
+def save_message(user_id, role, content):
+    """
+    save a message to db. fails silently to never block the user
+    """
+    try:
+        msg = Message(
+            user_id=user_id,
+            role=role,
+            content=content,
+            created_at=datetime.now(timezone.utc),
+        )
+        db.session.add(msg)
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Failed to save message: {e}")
 
 
 def user_has_multiple_documents():
     count = Document.query.filter_by(user_id=current_user.id, status="indexed").count()
 
     return count > 1
+
+
+@chat.route("/messages", methods=["GET"])
+@login_required
+def get_messages():
+    """
+    returns paginated messages history for current user
+
+    default: last 50 messages ordered oldest to newest for display
+    """
+    before = request.args.get("before")
+    limit = 50
+
+    query = Message.query.filter_by(user_id=current_user.id)
+
+    if before:
+        try:
+            before_dt = datetime.fromisoformat(before)
+            query = query.filter(Message.created_at < before_dt)
+        except ValueError:
+            return jsonify({"error": "invalid before parameter"}), 400
+
+    messages = query.order_by(Message.created_at.desc()).limit(limit).all()
+
+    messages = list(reversed(messages))
+
+    has_more = (
+        len(messages) == limit
+        and Message.query.filter(
+            Message.user_id == current_user.id,
+            (
+                Message.created_at < messages[0].created_at
+                if messages
+                else datetime.now(timezone.utc)
+            ),
+        ).count()
+        > 0
+    )
+
+    return jsonify({"messages": [m.to_dict() for m in messages], "has_more": has_more})
 
 
 @chat.route("/get", methods=["GET", "POST"])
@@ -21,6 +81,8 @@ def get():
         msg = request.form["msg"]
         user_input = msg.strip()
         user_id = current_user.id
+
+        save_message(user_id, "user", user_input)
 
         # checking to see if we are waiting for a State from the user
         if "waiting_for_state" in session and session["waiting_for_state"]:
@@ -58,10 +120,14 @@ def get():
                     session["waiting_for_state"] = True
                     session["original_question"] = user_input
 
+                    response = "You have multiple documents. Which jurisdiction or county does this question relate to?"
+
+                    save_message(user_id, "assistant", response)
+
                     return jsonify(
                         {
                             "success": True,
-                            "response": "You have multiple documents. Which jurisdiction or county does this question relate to?",
+                            "response": response,
                             "needs_state": True,
                         }
                     )
@@ -83,11 +149,16 @@ def get():
                     # no state mentioned and no previous state
                     session["waiting_for_state"] = True
                     session["original_question"] = user_input
+                    response = (
+                        "Which jurisdiction or county does this question relate to?"
+                    )
+
+                    save_message(user_id, "assistant", response)
 
                     return jsonify(
                         {
                             "success": True,
-                            "response": "Which jurisdiction or county does this question relate to?",
+                            "response": response,
                             "needs_state": True,
                         }
                     )
@@ -118,7 +189,6 @@ def get():
 @login_required
 def check_task(task_id):
     try:
-
         task = celery_app.AsyncResult(task_id)
 
         if task.state == "SUCCESS":
