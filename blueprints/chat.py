@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 chat = Blueprint("chat", __name__)
 
 
-def save_message(user_id, role, content):
+def save_message(user_id, role, content, task_id=None):
     """
     save a message to db. fails silently to never block the user
     """
@@ -18,6 +18,7 @@ def save_message(user_id, role, content):
             role=role,
             content=content,
             created_at=datetime.now(timezone.utc),
+            task_id=task_id,
         )
         db.session.add(msg)
         db.session.commit()
@@ -192,6 +193,11 @@ def check_task(task_id):
         task = celery_app.AsyncResult(task_id)
 
         if task.state == "SUCCESS":
+            existing = Message.query.filter_by(task_id=task_id).first()
+
+            if not existing:
+                save_message(current_user.id, "assistant", task.result, task_id=task_id)
+
             return jsonify({"status": "SUCCESS", "response": task.result})
 
         elif task.state == "PENDING":

@@ -95,6 +95,7 @@ class Message(db.Model):
         nullable=False,
         index=True,
     )
+    task_id = db.Column(db.String(255), nullable=True, unique=True, index=True)
 
     def to_dict(self):
         return {
