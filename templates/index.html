@@ -326,7 +326,7 @@
           });
       }
 
-      function addUserMsg(text) {
+      function addUserMsg(text, silent = false) {
         const box = document.getElementById("chatMessages");
         const wrap = document.createElement("div");
         wrap.className = "msg-wrap";
@@ -335,10 +335,10 @@
         <div class="msg-user-bubble">${esc(text)}</div>
       </div>`;
         box.appendChild(wrap);
-        scrollDown();
+        if (!silent) scrollDown();
       }
 
-      function addBotMsg(text) {
+      function addBotMsg(text, silent = false) {
         const box = document.getElementById("chatMessages");
         const id = "bot-" + Date.now();
         const wrap = document.createElement("div");
@@ -354,7 +354,7 @@
         <div class="msg-bot-content">${fmt(text)}</div>
       </div>`;
         box.appendChild(wrap);
-        scrollDown();
+        if (!silent) scrollDown();
         return id;
       }
 
@@ -632,6 +632,108 @@
       document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") closeModal();
       });
+
+      /* ── CHAT HISTORY ── */
+      let oldestMessageDate = null;
+      let hasMoreMessages = false;
+
+      async function loadHistory() {
+        try {
+          const res = await fetch("/messages");
+          const data = await res.json();
+
+          if (!data.messages.length) return;
+
+          hasMoreMessages = data.has_more;
+          oldestMessageDate = data.messages[0].created_at;
+
+          // insert load more button if there are older messages
+          if (hasMoreMessages) {
+            insertLoadMoreButton();
+          }
+
+          // render messages
+          data.messages.forEach((m) => {
+            if (m.role === "user") {
+              addUserMsg(m.content, true);
+            } else {
+              addBotMsg(m.content, true);
+            }
+          });
+
+          scrollDown();
+        } catch (e) {
+          console.error("Failed to load history:", e);
+        }
+      }
+
+      async function loadMoreHistory() {
+        if (!oldestMessageDate) return;
+        const btn = document.getElementById("loadMoreBtn");
+        if (btn) btn.textContent = "Loading...";
+
+        try {
+          const res = await fetch(
+            `/messages?before=${encodeURIComponent(oldestMessageDate)}`,
+          );
+          const data = await res.json();
+
+          if (!data.messages.length) {
+            if (btn) btn.remove();
+            return;
+          }
+
+          hasMoreMessages = data.has_more;
+          oldestMessageDate = data.messages[0].created_at;
+
+          const box = document.getElementById("chatMessages");
+          const firstChild = box.firstChild;
+
+          // prepend older messages above current ones
+          data.messages.forEach((m) => {
+            const wrap = document.createElement("div");
+            wrap.className = "msg-wrap";
+            if (m.role === "user") {
+              wrap.innerHTML = `<div class="msg-user"><div class="msg-user-bubble">${esc(m.content)}</div></div>`;
+            } else {
+              wrap.innerHTML = `
+          <div class="msg-bot">
+            <div class="bot-avatar">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <div class="msg-bot-content">${fmt(m.content)}</div>
+          </div>`;
+            }
+            box.insertBefore(wrap, firstChild);
+          });
+
+          if (!hasMoreMessages && btn) {
+            btn.remove();
+          } else if (btn) {
+            btn.textContent = "Load more";
+          }
+        } catch (e) {
+          console.error("Failed to load more history:", e);
+          if (btn) btn.textContent = "Load more";
+        }
+      }
+
+      function insertLoadMoreButton() {
+        const box = document.getElementById("chatMessages");
+        const existing = document.getElementById("loadMoreBtn");
+        if (existing) existing.remove();
+
+        const btn = document.createElement("button");
+        btn.id = "loadMoreBtn";
+        btn.textContent = "Load more";
+        btn.className = "load-more-btn";
+        btn.onclick = loadMoreHistory;
+        box.insertBefore(btn, box.firstChild);
+      }
+
+      loadHistory();
 
       loadDocuments();
     </script>
