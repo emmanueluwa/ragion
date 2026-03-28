@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account — SwiftCiv</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <style>
+      html,
+      body {
+        min-height: 100vh;
+        background: var(--bg);
+        font-family: "Inter", sans-serif;
+      }
+
+      .account-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        background: rgba(250, 249, 247, 0.88);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        height: 58px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 32px;
+      }
+
+      .account-nav-logo {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        text-decoration: none;
+      }
+
+      .account-nav-mark {
+        width: 28px;
+        height: 28px;
+        background: var(--text);
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .account-nav-mark svg {
+        color: white;
+      }
+
+      .account-nav-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: -0.01em;
+      }
+
+      .account-nav-right {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .account-nav-link {
+        font-size: 14px;
+        color: var(--text-2);
+        text-decoration: none;
+        transition: color 0.12s;
+      }
+
+      .account-nav-link:hover {
+        color: var(--text);
+      }
+
+      .account-wrap {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 96px 24px 60px;
+      }
+
+      .account-heading {
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: -0.02em;
+        margin-bottom: 6px;
+      }
+
+      .account-sub {
+        font-size: 14px;
+        color: var(--text-3);
+        margin-bottom: 32px;
+      }
+
+      .account-card {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        margin-bottom: 16px;
+      }
+
+      .account-card-head {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+
+      .account-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .account-row:last-child {
+        border-bottom: none;
+      }
+
+      .account-row-label {
+        font-size: 14px;
+        color: var(--text-2);
+      }
+
+      .account-row-value {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text);
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 10px;
+        border-radius: 100px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .status-pill.active {
+        background: #f0faf4;
+        color: #1a7a3f;
+        border: 1px solid rgba(26, 122, 63, 0.15);
+      }
+
+      .status-pill.cancelling {
+        background: #fef3ec;
+        color: #c0621a;
+        border: 1px solid rgba(192, 98, 26, 0.15);
+      }
+
+      .status-pill.canceled {
+        background: #fdf0ef;
+        color: #c0392b;
+        border: 1px solid rgba(192, 57, 43, 0.15);
+      }
+
+      .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .account-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 20px;
+      }
+
+      .btn-action {
+        width: 100%;
+        padding: 11px;
+        border-radius: 9px;
+        font-size: 14px;
+        font-weight: 500;
+        font-family: "Inter", sans-serif;
+        cursor: pointer;
+        transition: opacity 0.12s;
+        border: none;
+        text-align: center;
+      }
+
+      .btn-action:hover {
+        opacity: 0.82;
+      }
+
+      .btn-action.primary {
+        background: var(--text);
+        color: white;
+      }
+
+      .btn-action.secondary {
+        background: var(--white);
+        color: var(--text);
+        border: 1px solid var(--border-mid);
+      }
+
+      .btn-action.danger {
+        background: var(--white);
+        color: #c0392b;
+        border: 1px solid rgba(192, 57, 43, 0.2);
+      }
+
+      .btn-action:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .account-msg {
+        padding: 12px 16px;
+        border-radius: 9px;
+        font-size: 13px;
+        line-height: 1.5;
+        margin-top: 16px;
+        display: none;
+      }
+
+      .account-msg.success {
+        background: #f0faf4;
+        color: #1a7a3f;
+        border: 1px solid rgba(26, 122, 63, 0.15);
+      }
+
+      .account-msg.error {
+        background: #fdf0ef;
+        color: #c0392b;
+        border: 1px solid rgba(192, 57, 43, 0.15);
+      }
+
+      .account-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--text-3);
+        text-decoration: none;
+        margin-bottom: 24px;
+        transition: color 0.12s;
+      }
+
+      .account-back:hover {
+        color: var(--text-2);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="account-nav">
+      <a class="account-nav-logo" href="/app">
+        <div class="account-nav-mark">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <span class="account-nav-name">SwiftCiv</span>
+      </a>
+      <div class="account-nav-right">
+        <span style="font-size: 13px; color: var(--text-3)"
+          >{{ current_user.email }}</span
+        >
+        <a href="/logout" class="account-nav-link">Sign out</a>
+      </div>
+    </nav>
+
+    <div class="account-wrap">
+      <a href="/app" class="account-back">
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+        Back to app
+      </a>
+
+      <div class="account-heading">Account</div>
+      <div class="account-sub">Manage your subscription and billing.</div>
+
+      <!-- Subscription details -->
+      <div class="account-card">
+        <div class="account-card-head">Subscription</div>
+
+        <div class="account-row">
+          <span class="account-row-label">Plan</span>
+          <span class="account-row-value">{{ subscription.plan }}</span>
+        </div>
+
+        <div class="account-row">
+          <span class="account-row-label">Price</span>
+          <span class="account-row-value">{{ subscription.price }}</span>
+        </div>
+
+        <div class="account-row">
+          <span class="account-row-label">Status</span>
+          <span class="account-row-value">
+            {% if subscription.status == "active" and not
+            subscription.cancel_at_period_end %}
+            <span class="status-pill active">
+              <span class="status-dot"></span>
+              Active
+            </span>
+            {% elif subscription.cancel_at_period_end %}
+            <span class="status-pill cancelling">
+              <span class="status-dot"></span>
+              Cancels {{ subscription.current_period_end }}
+            </span>
+            {% elif subscription.status == "canceled" %}
+            <span class="status-pill canceled">
+              <span class="status-dot"></span>
+              Cancelled
+            </span>
+            {% else %}
+            <span class="status-pill">{{ subscription.status or "—" }}</span>
+            {% endif %}
+          </span>
+        </div>
+
+        {% if subscription.current_period_end and not
+        subscription.cancel_at_period_end %}
+        <div class="account-row">
+          <span class="account-row-label">Next billing date</span>
+          <span class="account-row-value"
+            >{{ subscription.current_period_end }}</span
+          >
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Actions -->
+      <div class="account-card">
+        <div class="account-card-head">Billing</div>
+        <div class="account-actions">
+          <button class="btn-action secondary" onclick="updatePayment()">
+            Update payment method
+          </button>
+
+          {% if subscription.cancel_at_period_end %}
+          <button class="btn-action primary" onclick="reactivate()">
+            Reactivate subscription
+          </button>
+          {% elif subscription.status == "active" %}
+          <button class="btn-action danger" onclick="confirmCancel()">
+            Cancel subscription
+          </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="account-msg" id="accountMsg"></div>
+    </div>
+
+    <script>
+      function showMsg(text, type) {
+        const el = document.getElementById("accountMsg");
+        el.textContent = text;
+        el.className = `account-msg ${type}`;
+        el.style.display = "block";
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+
+      function confirmCancel() {
+        if (
+          !confirm(
+            "Cancel your subscription? You will keep access until the end of the current billing period.",
+          )
+        )
+          return;
+        cancelSubscription();
+      }
+
+      async function cancelSubscription() {
+        try {
+          const res = await fetch("/account/cancel", { method: "POST" });
+          const data = await res.json();
+          if (res.ok) {
+            showMsg(data.message, "success");
+            setTimeout(() => location.reload(), 2000);
+          } else {
+            showMsg(data.error || "Something went wrong.", "error");
+          }
+        } catch {
+          showMsg("Something went wrong. Please try again.", "error");
+        }
+      }
+
+      async function reactivate() {
+        try {
+          const res = await fetch("/account/reactivate", { method: "POST" });
+          const data = await res.json();
+          if (res.ok) {
+            showMsg(data.message, "success");
+            setTimeout(() => location.reload(), 2000);
+          } else {
+            showMsg(data.error || "Something went wrong.", "error");
+          }
+        } catch {
+          showMsg("Something went wrong. Please try again.", "error");
+        }
+      }
+
+      async function updatePayment() {
+        try {
+          const res = await fetch("/account/update-payment", {
+            method: "POST",
+          });
+          const data = await res.json();
+          if (res.ok) {
+            window.location.href = data.url;
+          } else {
+            showMsg(data.error || "Something went wrong.", "error");
+          }
+        } catch {
+          showMsg("Something went wrong. Please try again.", "error");
+        }
+      }
+    </script>
+  </body>
+</html>
