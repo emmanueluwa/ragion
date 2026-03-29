@@ -761,18 +761,13 @@
     <!-- NAV -->
     <nav>
       <a class="nav-logo" href="/">
-        <div class="nav-logo-mark">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-          >
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-          </svg>
-        </div>
+        <img
+          src="{{ url_for('static', filename='images/swiftciv-logo.png') }}"
+          width="28"
+          height="28"
+          alt="SwiftCiv"
+          style="display: block; border-radius: 7px"
+        />
         <span class="nav-logo-name">SwiftCiv</span>
       </a>
       <div class="nav-right">
@@ -1312,18 +1307,13 @@
     <!-- FOOTER -->
     <footer>
       <a class="footer-logo" href="/">
-        <div class="footer-logo-mark">
-          <svg
-            width="11"
-            height="11"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="white"
-            stroke-width="2.5"
-          >
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-          </svg>
-        </div>
+        <img
+          src="{{ url_for('static', filename='images/swiftciv-logo.png') }}"
+          width="24"
+          height="24"
+          alt="SwiftCiv"
+          style="display: block; border-radius: 6px"
+        />
         <span class="footer-name">SwiftCiv</span>
       </a>
       <span class="footer-copy">© 2026 SwiftCiv. All rights reserved.</span>

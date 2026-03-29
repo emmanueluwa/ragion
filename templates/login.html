@@ -31,21 +31,6 @@
         padding: 24px;
       }
 
-      .login-logo {
-        width: 36px;
-        height: 36px;
-        background: var(--text);
-        border-radius: 9px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 28px;
-      }
-
-      .login-logo svg {
-        color: white;
-      }
-
       .login-heading {
         font-size: 20px;
         font-weight: 600;
@@ -152,18 +137,13 @@
   </head>
   <body>
     <div class="login-wrap">
-      <div class="login-logo">
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-        >
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-        </svg>
-      </div>
+      <img
+        src="{{ url_for('static', filename='images/swiftciv-logo.png') }}"
+        width="36"
+        height="36"
+        alt="SwiftCiv"
+        style="display: block; margin-bottom: 28px"
+      />
 
       <div class="login-heading">Sign in to SwiftCiv</div>
       <div class="login-sub">
