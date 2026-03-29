@@ -68,6 +68,22 @@
           </svg>
         </button>
 
+        <!-- Feedback -->
+        <button class="icon-btn" onclick="openFeedback()" title="Send feedback">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"
+            />
+          </svg>
+        </button>
+
         <!-- Account -->
         <a
           href="/account"
@@ -270,6 +286,62 @@
       </div>
     </div>
 
+    <!-- FEEDBACK MODAL -->
+    <div
+      class="overlay"
+      id="feedbackOverlay"
+      onclick="handleFeedbackOverlayClick(event)"
+    >
+      <div class="modal">
+        <div class="modal-head">
+          <h2>Send feedback</h2>
+          <button class="modal-close" onclick="closeFeedback()">&times;</button>
+        </div>
+        <div class="field" style="padding: 20px 20px 0">
+          <label>Your message</label>
+          <textarea
+            id="feedbackText"
+            placeholder="Tell us what you think, report a bug, or suggest a feature..."
+            rows="5"
+            style="
+              width: 100%;
+              background: var(--bg);
+              border: 1px solid var(--border);
+              border-radius: 9px;
+              padding: 11px 13px;
+              font-family: &quot;Inter&quot;, sans-serif;
+              font-size: 14px;
+              color: var(--text);
+              outline: none;
+              resize: vertical;
+              transition: border-color 0.12s;
+            "
+          ></textarea>
+        </div>
+        <div style="padding: 8px 20px 4px">
+          <div
+            id="feedbackMsg"
+            style="
+              font-size: 13px;
+              display: none;
+              padding: 8px 12px;
+              border-radius: 7px;
+            "
+          ></div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeFeedback()">Cancel</button>
+          <button
+            class="btn-upload"
+            id="feedbackBtn"
+            onclick="submitFeedback()"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+
     <script>
       /* ── TEXTAREA AUTO-RESIZE ── */
       const ta = document.getElementById("userMessage");
@@ -449,6 +521,73 @@
             })
             .catch(() => clearInterval(iv));
         }, 2000);
+      }
+
+      /* ── FEEDBACK ── */
+      function openFeedback() {
+        document.getElementById("feedbackOverlay").classList.add("open");
+        document.getElementById("feedbackText").focus();
+      }
+
+      function closeFeedback() {
+        document.getElementById("feedbackOverlay").classList.remove("open");
+        document.getElementById("feedbackText").value = "";
+        document.getElementById("feedbackMsg").style.display = "none";
+        document.getElementById("feedbackBtn").disabled = false;
+        document.getElementById("feedbackBtn").textContent = "Send";
+      }
+
+      function handleFeedbackOverlayClick(e) {
+        if (e.target === document.getElementById("feedbackOverlay"))
+          closeFeedback();
+      }
+
+      async function submitFeedback() {
+        const message = document.getElementById("feedbackText").value.trim();
+        const btn = document.getElementById("feedbackBtn");
+        const msg = document.getElementById("feedbackMsg");
+
+        if (!message) {
+          msg.style.display = "block";
+          msg.style.background = "#fdf0ef";
+          msg.style.color = "#c0392b";
+          msg.textContent = "Please enter a message.";
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Sending...";
+
+        try {
+          const res = await fetch("/feedback", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message }),
+          });
+          const data = await res.json();
+
+          msg.style.display = "block";
+          if (res.ok) {
+            msg.style.background = "#f0faf4";
+            msg.style.color = "#1a7a3f";
+            msg.textContent = data.message;
+            btn.textContent = "Sent";
+            setTimeout(() => closeFeedback(), 2000);
+          } else {
+            msg.style.background = "#fdf0ef";
+            msg.style.color = "#c0392b";
+            msg.textContent = data.error || "Something went wrong.";
+            btn.disabled = false;
+            btn.textContent = "Send";
+          }
+        } catch {
+          msg.style.display = "block";
+          msg.style.background = "#fdf0ef";
+          msg.style.color = "#c0392b";
+          msg.textContent = "Something went wrong. Please try again.";
+          btn.disabled = false;
+          btn.textContent = "Send";
+        }
       }
 
       /* ── DOCUMENTS ── */
@@ -650,7 +789,10 @@
       }
 
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeModal();
+        if (e.key === "Escape") {
+          closeModal();
+          closeFeedback();
+        }
       });
 
       /* ── CHAT HISTORY ── */
