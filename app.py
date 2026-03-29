@@ -9,6 +9,7 @@ from blueprints.auth import auth as auth_blueprint
 from blueprints.chat import chat as chat_blueprint
 from blueprints.documents import documents as documents_blueprint
 from blueprints.billing import billing as billing_blueprint
+from blueprints.feedback import feedback as feedback_blueprint
 
 celery_app.autodiscover_tasks(["tasks"], force=True)
 
@@ -45,6 +46,7 @@ def create_app():
     app.register_blueprint(chat_blueprint)
     app.register_blueprint(documents_blueprint)
     app.register_blueprint(billing_blueprint)
+    app.register_blueprint(feedback_blueprint)
 
     # creating tables
     with app.app_context():
