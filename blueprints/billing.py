@@ -58,7 +58,7 @@ def account():
     """account page showing subscription details"""
     subscription_data = {
         "plan": "SwiftCiv Pro",
-        "price": "£97/month",
+        "price": "$97/month",
         "status": None,
         "current_period_end": None,
         "cancel_at_period_end": False,
