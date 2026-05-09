@@ -10,6 +10,9 @@
     },
     "beat": {
       "command": "celery -A tasks beat --loglevel=info"
+    },
+    "embedding": {
+      "command": "python embedding_service.py"
     }
   }
 }
