@@ -132,6 +132,86 @@
         opacity: 0.82;
       }
 
+      .nav-hamburger {
+        display: none;
+      }
+
+      .mobile-menu {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 200;
+        backdrop-filter: blur(4px);
+      }
+
+      .mobile-menu.open {
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-end;
+      }
+
+      .mobile-menu-inner {
+        background: var(--white);
+        width: 75%;
+        max-width: 300px;
+        height: 100%;
+        padding: 24px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+      }
+
+      .mobile-menu-close {
+        align-self: flex-end;
+        background: var(--bg-2, #f3f2ef);
+        border: none;
+        border-radius: 6px;
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+        cursor: pointer;
+        color: var(--text-2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+      }
+
+      .mobile-menu-link {
+        display: block;
+        padding: 14px 12px;
+        font-size: 16px;
+        color: var(--text-2);
+        text-decoration: none;
+        border-radius: 8px;
+        transition: background 0.12s;
+      }
+
+      .mobile-menu-link:hover {
+        background: var(--bg, #faf9f7);
+        color: var(--text);
+      }
+
+      .mobile-menu-cta {
+        display: block;
+        margin-top: 12px;
+        padding: 14px 12px;
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--white);
+        background: var(--text);
+        text-decoration: none;
+        border-radius: 8px;
+        text-align: center;
+        transition: opacity 0.12s;
+      }
+
+      .mobile-menu-cta:hover {
+        opacity: 0.82;
+      }
+
       /* ── HERO ── */
       .hero {
         padding: 140px 24px 80px;
@@ -743,8 +823,18 @@
         nav {
           padding: 0 18px;
         }
-        .nav-link {
+        .nav-right {
           display: none;
+        }
+        .nav-hamburger {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: var(--text);
+          padding: 4px;
         }
         .hero {
           padding: 110px 18px 60px;
@@ -778,6 +868,24 @@
         />
         <span class="nav-logo-name">SwiftCiv</span>
       </a>
+      <button
+        class="nav-hamburger"
+        onclick="toggleMobileMenu()"
+        aria-label="Menu"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
       <div class="nav-right">
         <a href="#how-it-works" class="nav-link">How it works</a>
         <a href="#pricing" class="nav-link">Pricing</a>
@@ -1330,5 +1438,32 @@
         <a href="mailto:hello@swiftciv.com">Contact</a>
       </div>
     </footer>
+    <div class="mobile-menu" id="mobileMenu">
+      <div class="mobile-menu-inner">
+        <button class="mobile-menu-close" onclick="toggleMobileMenu()">
+          &times;
+        </button>
+        <a
+          href="#how-it-works"
+          class="mobile-menu-link"
+          onclick="toggleMobileMenu()"
+          >How it works</a
+        >
+        <a href="#pricing" class="mobile-menu-link" onclick="toggleMobileMenu()"
+          >Pricing</a
+        >
+        <a href="/login" class="mobile-menu-link" onclick="toggleMobileMenu()"
+          >Sign in</a
+        >
+        <a href="#pricing" class="mobile-menu-cta" onclick="toggleMobileMenu()"
+          >Get started</a
+        >
+      </div>
+    </div>
+    <script>
+      function toggleMobileMenu() {
+        document.getElementById("mobileMenu").classList.toggle("open");
+      }
+    </script>
   </body>
 </html>
