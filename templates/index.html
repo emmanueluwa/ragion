@@ -721,6 +721,19 @@
         const prog = document.getElementById("uploadProgress");
         prog.innerHTML = "";
 
+        // warn user if any file is large
+        const largeFiles = selectedFiles.filter(
+          (f) => f.size > 10 * 1024 * 1024,
+        );
+        if (largeFiles.length) {
+          const warning = document.createElement("div");
+          warning.style.cssText =
+            "font-size:13px;color:#c0621a;background:#fef3ec;border:1px solid rgba(192,98,26,0.15);border-radius:8px;padding:10px 13px;margin-bottom:12px;";
+          warning.textContent =
+            "Large file — processing may take a few minutes. You can close this window.";
+          prog.appendChild(warning);
+        }
+
         for (const file of selectedFiles) {
           const safeId = "f" + Math.random().toString(36).slice(2);
           const item = document.createElement("div");
