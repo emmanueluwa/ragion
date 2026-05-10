@@ -138,11 +138,15 @@ def index_document(
     if ocr_needed:
         logger.info(f"running ocr on {len(ocr_needed)} scanned pages")
 
-        images = convert_from_path(abs_file_path)
-
         for page_num in ocr_needed:
             try:
-                text = pytesseract.image_to_string(images[page_num])
+                images = convert_from_path(
+                    abs_file_path, first_page=page_num + 1, last_page=page_num + 1
+                )
+                text = pytesseract.image_to_string(images[0])
+
+                del images
+
                 if text.strip():
                     all_pages[page_num] = Document(
                         page_content=text,
@@ -154,8 +158,6 @@ def index_document(
                     )
             except Exception as e:
                 logger.warning(f"OCR failed for page {page_num}: {e}")
-
-        del images
 
     if progress_callback:
         progress_callback(30, "Preparing index")
