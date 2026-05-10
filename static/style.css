@@ -862,6 +862,17 @@ body {
 }
 
 @media (max-width: 640px) {
+  .cite-block {
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    word-break: break-word;
+  }
+
+  .cite-block svg {
+    display: none;
+  }
+
   .panel {
     position: fixed;
     top: 0;
