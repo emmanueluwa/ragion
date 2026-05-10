@@ -151,15 +151,18 @@
         </div>
       </aside>
 
+      <!-- mobile panel backdrop -->
+      <div
+        class="panel-backdrop"
+        id="panelBackdrop"
+        onclick="togglePanel()"
+      ></div>
+
       <!-- MAIN CHAT -->
       <main class="main">
         <div class="topbar">
-          <span class="topbar-label"
-            ><strong>SwiftCiv</strong> — Regulatory Assistant</span
-          >
-          <span style="font-size: 12px; color: var(--text-3); margin-left: auto"
-            >{{ current_user.email }}</span
-          >
+          <span class="topbar-label"><strong>SwiftCiv</strong></span>
+          <span class="topbar-email">{{ current_user.email }}</span>
         </div>
 
         <div class="chat-messages" id="chatMessages">
@@ -368,6 +371,9 @@
         document
           .getElementById("docsToggle")
           .classList.toggle("active", panelOpen);
+        document
+          .getElementById("panelBackdrop")
+          .classList.toggle("open", panelOpen);
       }
 
       /* ── HELPERS ── */
