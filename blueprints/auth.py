@@ -51,6 +51,8 @@ def login():
 @auth.route("/login", methods=["POST"])
 def request_magic_link():
     email = request.form.get("email") or (request.get_json() or {}).get("email")
+    if email:
+        email = email.strip().lower()
 
     if not email or "@" not in email:
         return jsonify({"error": "Valid email required"}), 400
@@ -75,6 +77,7 @@ def verify_token(token):
 
     try:
         email = s.loads(token, salt="magic-link", max_age=900)
+        email = email.strip().lower()
     except SignatureExpired:
         return render_template(
             "login.html", error="Link expired. Please request a new one."
