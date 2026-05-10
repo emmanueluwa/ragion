@@ -142,13 +142,33 @@
   </head>
   <body>
     <div class="login-wrap">
-      <img
-        src="{{ url_for('static', filename='images/swiftciv-logo.svg') }}"
-        width="36"
-        height="36"
-        alt="SwiftCiv"
-        style="display: block; margin-bottom: 28px"
-      />
+      <a
+        href="/"
+        style="
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          text-decoration: none;
+          margin-bottom: 32px;
+        "
+      >
+        <img
+          src="{{ url_for('static', filename='images/swiftciv-logo.svg') }}"
+          width="28"
+          height="28"
+          alt="SwiftCiv"
+          style="display: block; border-radius: 7px"
+        />
+        <span
+          style="
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: -0.01em;
+          "
+          >SwiftCiv</span
+        >
+      </a>
 
       <div class="login-heading">Sign in to SwiftCiv</div>
       <div class="login-sub">
@@ -175,6 +195,26 @@
         {% else %}
         <div class="flash-msg" id="formMsg" style="display: none"></div>
         {% endif %}
+      </div>
+
+      <div
+        style="
+          margin-top: 20px;
+          text-align: center;
+          font-size: 13px;
+          color: var(--text-3);
+        "
+      >
+        Don't have access?
+        <a
+          href="/checkout"
+          style="
+            color: var(--text-2);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+          "
+          >Get started</a
+        >
       </div>
     </div>
     <script>
