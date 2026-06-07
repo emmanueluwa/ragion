@@ -1,0 +1,47 @@
+{
+  "document": "Manatee_County_Stormwater_Standards.pdf",
+  "jurisdiction": "manatee",
+  "description": "Manatee County stormwater design standards — primary eval dataset",
+  "qa_pairs": [
+    {
+      "id": "MC-SW-001",
+      "question": "What is the minimum pipe cover for a 24 inch RCP in Manatee County?",
+      "ground_truth_answer": "LESS THAN FIVE FEET OF COVER OVER THE PIPE",
+      "ground_truth_section": "Appendix A-4 on page 32",
+      "difficulty": "factual",
+      "category": "pipe_sizing"
+    },
+    {
+      "id": "MC-SW-002",
+      "question": "What design storm is required for a local road not in a floodplain in Manatee County?",
+      "ground_truth_answer": "For local streets, bridges and culverts not in the published one hundred (100) year floodplain, the design storm shall be twenty-five (25) year frequency.",
+      "ground_truth_section": "Section 2.3.6 “Streets” on page SW-3 / page 8",
+      "difficulty": "factual",
+      "category": "storm_design"
+    },
+    {
+      "id": "MC-SW-003",
+      "question": "What is the minimum seasonal high water table clearance for stormwater facilities in Manatee County?",
+      "ground_truth_answer": "All roadways shall be designed to provide a minimum of one (1) foot between the bottom of the base course of the roadway and the seasonal high groundwater table.",
+      "ground_truth_section": "Section 2.4.2 Minimum Groundwater and High-Water Clearances on page SW-ii / page 4",
+      "difficulty": "factual",
+      "category": "water_table"
+    },
+    {
+      "id": "MC-SW-004",
+      "question": "What is the maximum pond side slope for a dry detention pond in Manatee County?",
+      "ground_truth_answer": "The maximum allowable side slope is that of 4:1 (4 feet horizontally for every 1 foot vertical);",
+      "ground_truth_section": "Section 2.3.17.A.3 “Detention and Retention System Design Criteria” on page SW-12 / page 16",
+      "difficulty": "factual",
+      "category": "pond_design"
+    },
+    {
+      "id": "MC-SW-005",
+      "question": "What is the minimum freeboard requirement for stormwater ponds in Manatee County?",
+      "ground_truth_answer": "A minimum of one (1) foot of freeboard will be required, regardless of the design storm or the type of development.",
+      "ground_truth_section": "Section 2.3.17 “Detention and Retention System Design Criteria” on page SW-12 / page 16",
+      "difficulty": "factual",
+      "category": "pond_design"
+    }
+  ]
+}
