@@ -1,141 +1,121 @@
-# Ragion
+# SwiftCiv
 
-A smart, AI-powered document search and retrieval tool for civil engineers  
-_Efficiently find codes, regulations, and technical manuals—no more manual digging or outdated notes._
+A RAG SaaS for civil engineers. Upload county manuals and design standards, ask regulatory questions in plain English, and get verbatim quotes with section and page citations.
+
+Previously Ragion. Live at [swiftciv.com](https://swiftciv.com).
+
+[Blog / design document](https://osasufyi.notion.site/SwiftCiv-Design-Document-33548366ce84800da6d1fda999774757)
 
 ---
 
 ![Project Screenshot](static/images/screen-shot.png "A screenshot of the application")
 
-- [Blog Post: Project Design Document](https://fulphrone.netlify.app/blog/ragion/) — Further discussion about some of the issues I faced with the project.
-
 ## Table of Contents
 
 - [Overview](#overview)
-- [Motivation](#motivation)
+- [The problem](#the-problem)
 - [Features](#features)
-- [How It Works](#how-it-works)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
+- [How it works](#how-it-works)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
 - [Demo](#demo)
 - [Roadmap](#roadmap)
-  <!-- - [Contributing](#contributing) -->
-  <!-- - [License](#license) -->
 
 ---
 
 ## Overview
 
-**Ragion** is a web application designed to streamline the daily workflow of civil engineers by making it fast and easy to search, retrieve, and reference technical documents such as land development codes, ordinances, and stormwater design manuals.  
-It automates what used to be a tedious process eliminating the need to manually browse OneNote, PDFs, or scattered files.
+**SwiftCiv** is a production RAG application for civil engineers. Users upload PDFs (county manuals, stormwater standards, land development codes), ask questions in plain English, and receive answers that quote the source document verbatim with section number and page citation.
+
+Jurisdiction is detected from the document. Quotes and page citations are enforced in the system prompt. Documents are private and persist across sessions.
 
 ---
 
-## Motivation
+## The problem
 
-Civil engineers spend significant time searching for up-to-date codes, regulations, and technical standards.  
-Existing solutions (like shared OneNote notebooks or manual PDF search) are hard to maintain, error-prone, and inefficient—especially when information is updated or phrased differently than expected.
+Engineers already try to use ChatGPT for code lookups. Making it reliable takes prompt engineering, maintenance, and it still forgets rules between sessions.
 
-**Ragion** solves this by providing:
+SwiftCiv does this out of the box:
 
-- Instant, accurate search across all your technical documents
-- Context-aware retrieval, so you find what you need even if you don’t remember the exact wording
-- Source citations for every result, so you know exactly where the information comes from
+- Jurisdiction detected from the document — no prompting
+- Verbatim quotes enforced — the model cannot paraphrase
+- Page citations always included
+- Upload once, query forever
+- Works correctly from the first question
 
 ---
 
 ## Features
 
-- **AI-Powered Query Response:**  
-  Enter questions in your own words; the system uses a Large Language Model (currently Google Gemini) with LangChain and Pinecone to interpret your query and retrieve relevant information from indexed documents.
-- **Cited Answers:**  
-  Responses are generated based on the most relevant document chunks and include citations or references to the original sources where possible.
-- **Jurisdiction Filtering:**  
-  Filter results by county or regulation type for precise answers.
-- **Real-Time Progress:**  
-  See upload and indexing progress instantly in the UI.
-- **Easy Upload:**  
-  Add new manuals or codes via a simple drag-and-drop interface.
-- **Scalable Backend:**  
-  Built to handle large document sets and multiple users.
+- Magic-link auth after Stripe checkout (£97/month) — no password
+- PDF upload with real-time indexing progress
+- Automatic jurisdiction detection from the first pages of the document
+- Conversational search with verbatim quotes and page citations
+- Source-backed answers from the user's private document set
+- Chat history with cursor-based pagination
+- Document status pills: processing, indexed, deleting
+- Account page: plan, billing date, cancel / reactivate / update card
+- Feedback via Telegram
 
 ---
 
-## How It Works
+## How it works
 
-1. **Upload Documents:**  
-   Civil engineers or admins upload technical documents (PDFs, manuals, codes).
+1. User signs up via Stripe and logs in with a magic link (AWS SES).
+2. They upload a PDF. SwiftCiv hashes it (reject duplicates), stores it on Hetzner S3, and queues indexing.
+3. A Celery worker chunks the document (1200 chars, 600 overlap), embeds it, and writes vectors to a private Pinecone namespace with deterministic IDs.
+4. Jurisdiction is inferred from the first three pages via Gemini.
+5. On a question, the app retrieves `k=15` chunks and the LLM returns a quoted answer with section and page.
+6. Messages are saved idempotently using the Celery `task_id`.
 
-2. **Automated Indexing:**  
-   Documents are split into context-preserving chunks, enriched with metadata (like jurisdiction), and indexed for fast retrieval using Pinecone.
-
-3. **AI-Powered Query Response:**  
-   Users enter questions in their own words.  
-   The system uses a Large Language Model (currently Google Gemini), orchestrated with LangChain and Pinecone, to interpret the user’s query and retrieve relevant information from the indexed documents.  
-   Responses are generated by the LLM based on the most relevant document chunks, and include citations or references to the original sources where possible.
-
-> **Note:**  
-> The current implementation relies on an LLM (Google Gemini) for interpreting queries and generating responses. While this enables flexible, conversational search, it may not always return the correct quotes from source documents. Future versions may explore pure NLP and semantic search for stricter retrieval and quoting to improve performance.
+Deletion spans PostgreSQL, Pinecone, and S3. Failures retry with backoff; stuck jobs are requeued and alerted on Telegram.
 
 ---
 
-## Tech Stack
+## Tech stack
 
-- **Frontend:** HTML, CSS, JavaScript
-- **Backend:** Python Flask
-- **Search/Indexing:** Pinecone (vector database), LangChain
-- **AI/NLP:** Google Gemini (LLM)
-- **Task Queue:** Celery
-- **Progress Tracking:** Redis
+- **Frontend:** HTML, CSS, JavaScript, Jinja2
+- **Backend:** Flask, Gunicorn, Caddy
+- **Auth:** magic links (`itsdangerous`), AWS SES
+- **Payments:** Stripe (checkout, webhooks, billing portal)
+- **Database:** PostgreSQL (SQLAlchemy)
+- **Search / RAG:** Pinecone, LangChain, Google Gemini
+- **Storage:** Hetzner S3
+- **Queue / progress:** Celery, Redis
+- **Deploy:** Hetzner VPS (Ubuntu 24), Docker / Disco, Let's Encrypt via Caddy
+- **Alerts:** Telegram
 
 ---
 
-## Getting Started
+## Getting started
 
-1. **Clone the repository**
-2. **Install backend dependencies**
-
+```Bash
+git clone <https://github.com/emmanueluwa/ragion.git>
+cd <repo>
 pip install -r requirements.txt
+```
 
-4. **Set up environment variables** (see `.env.example`)
-5. **Start backend server**
+Copy .env.example to .env and fill in keys (Gemini, Pinecone, Stripe, SES, Redis, Postgres, S3).
 
+```Bash
 python app.py
+```
 
-Run celery with the following command in another terminal
+In another terminal:
 
+```Bash
 celery -A tasks worker --loglevel=info
+```
 
-6. **Upload documents and start searching!**
+Upload a PDF and ask a regulatory question.
 
-<!-- > _Detailed setup and deployment instructions coming soon._ -->
-
----
-
-## Demo
-
-[![Watch the demo](static/images/ragion-yt-thumbnail.png)](https://www.youtube.com/watch?v=mlRw6PO-Dok)
-
----
+# Demo
 
 ## Roadmap
 
-- Improve search accuracy and context retrieval
-- Add more document types and support for additional jurisdictions
-- Enhance the UI for better user experience
-- Explore using traditional NLP for even lighter, faster search where possible
-
----
-
-<!-- ## Contributing
-
-Contributions are welcome!
-If you have ideas, find a bug, or want to help improve Ragion, please open an issue or submit a pull request. -->
-
-<!-- ---
-
-## License
-
-MIT License
-
---- -->
+Inline PDF viewer on citation click
+Chat history search
+Team accounts and shared knowledge bases
+Multi-document / multi-county compare
+Managed Postgres + backups
+GitHub Actions CI/CD
