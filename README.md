@@ -109,13 +109,15 @@ celery -A tasks worker --loglevel=info
 
 Upload a PDF and ask a regulatory question.
 
-# Demo
+## Demo
+
+[![Watch the demo](https://img.youtube.com/vi/y8KpBLsrmCQ/maxresdefault.jpg)](https://www.youtube.com/watch?v=y8KpBLsrmCQ)
 
 ## Roadmap
 
-Inline PDF viewer on citation click
-Chat history search
-Team accounts and shared knowledge bases
-Multi-document / multi-county compare
-Managed Postgres + backups
-GitHub Actions CI/CD
+- Inline PDF viewer on citation click
+- Chat history search
+- Team accounts and shared knowledge bases
+- Multi-document / multi-county compare
+- Managed Postgres + backups
+- GitHub Actions CI/CD
