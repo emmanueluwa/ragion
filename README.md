@@ -2,7 +2,7 @@
 
 A RAG SaaS for civil engineers. Upload county manuals and design standards, ask regulatory questions in plain English, and get verbatim quotes with section and page citations.
 
-Previously Ragion. Live at [swiftciv.com](https://swiftciv.com).
+<!-- Previously Ragion. Live at [swiftciv.com](https://swiftciv.com). -->
 
 [Blog / design document](https://osasufyi.notion.site/SwiftCiv-Design-Document-33548366ce84800da6d1fda999774757)
 
